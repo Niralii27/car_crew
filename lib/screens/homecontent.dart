@@ -222,19 +222,19 @@ class _HomeContentState extends State<HomeContent> {
                     SizedBox(
                       height: deviceHeight * 0.01,
                     ),
-                    Container(
-                      child: Column(
-                        children: [
-                          Text(
-                            'Car Booking',
-                            style: TextStyle(
-                              fontSize: deviceWidth * 0.06,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Container(
+                    //   child: Column(
+                    //     children: [
+                    //       Text(
+                    //         'Car Booking',
+                    //         style: TextStyle(
+                    //           fontSize: deviceWidth * 0.06,
+                    //           fontWeight: FontWeight.bold,
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
