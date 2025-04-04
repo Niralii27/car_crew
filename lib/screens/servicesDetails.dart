@@ -1,3 +1,4 @@
+import 'package:car_crew/screens/serviceInner.dart';
 import 'package:flutter/material.dart';
 
 class Servicesdetails extends StatefulWidget {
@@ -106,16 +107,21 @@ class CarServiceCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    "assets/car_service_img1.png", // Replace with actual image URL
-                    height: 80,
-                    width: 100,
+                  child: Image.asset(
+                    "assets/car_service_img1.png",
+                    width: MediaQuery.of(context).size.width * 0.2,
+                    height: MediaQuery.of(context).size.width * 0.2,
                     fit: BoxFit.cover,
                   ),
                 ),
                 SizedBox(height: 8),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Serviceinner()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,

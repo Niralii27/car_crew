@@ -108,11 +108,13 @@ class ServiceCard extends StatelessWidget {
                 ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to Registration page
-               
-              },
+          ElevatedButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => Servicesdetails()),
+    );
+  },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 shape: RoundedRectangleBorder(
