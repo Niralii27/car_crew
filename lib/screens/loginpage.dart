@@ -1,4 +1,4 @@
-import 'package:car_crew/screens/bottom_nav_bar.dart';
+import 'package:car_crew/screens/forgotPassword.dart';
 import 'package:car_crew/screens/home.dart';
 import 'package:car_crew/screens/registration.dart';
 import 'package:flutter/gestures.dart';
@@ -128,7 +128,13 @@ class _loginpageState extends State<loginpage> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        ForgotpasswordPage()));
+                          },
                           child: Text(
                             'Forgot Password?',
                             style: TextStyle(fontWeight: FontWeight.bold),
