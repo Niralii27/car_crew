@@ -1,3 +1,4 @@
+import 'package:car_crew/screens/sideNavbar.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -82,10 +83,18 @@ class _HomeContentState extends State<HomeContent> {
                           Row(
                             children: [
                               // Logo
-                              CircleAvatar(
-                                radius: deviceWidth * 0.07,
-                                backgroundImage:
-                                    AssetImage('assets/profile.png'),
+                              GestureDetector(
+                                onTap: () {
+                                  // Open the side panel using Navigator.push
+                                  Navigator.of(context).push(
+                                    _createSidePanelRoute(),
+                                  );
+                                },
+                                child: CircleAvatar(
+                                  radius: deviceWidth * 0.07,
+                                  backgroundImage:
+                                      AssetImage('assets/profile.png'),
+                                ),
                               ),
                               SizedBox(width: deviceWidth * 0.03),
 
@@ -244,4 +253,32 @@ class _HomeContentState extends State<HomeContent> {
       ),
     );
   }
+}
+
+// Create a custom route for the side panel
+PageRouteBuilder _createSidePanelRoute() {
+  return PageRouteBuilder(
+    opaque: false,
+    barrierDismissible: true,
+    barrierColor: Colors.black54,
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Sidenavbar(),
+      );
+    },
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(-1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOut;
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
 }

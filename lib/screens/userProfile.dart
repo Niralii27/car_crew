@@ -76,8 +76,8 @@ class ProfilePage extends StatelessWidget {
                     primaryBlue, '/history'),
                 optionTile(
                     context, 'Support', Icons.headset_mic, primaryBlue, ''),
-                optionTile(
-                    context, 'About Us', Icons.info, primaryBlue, '/about'),
+                optionTile(context, 'About Us', Icons.info, primaryBlue,
+                    '/sideNavbar'),
                 const SizedBox(height: 10),
                 optionTile(
                     context, 'Log out', Icons.logout, Colors.redAccent, ''),

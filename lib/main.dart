@@ -1,9 +1,10 @@
+import 'package:car_crew/screens/sideNavbar.dart';
 import 'package:flutter/material.dart';
 import 'package:car_crew/screens/loginpage.dart';
 import 'package:car_crew/screens/account.dart';
 import 'package:car_crew/screens/cardetail.dart';
 import 'package:car_crew/screens/help.dart';
-import 'package:car_crew/screens/about.dart';
+import 'package:car_crew/screens/sideNavbar.dart';
 import 'package:car_crew/screens/history.dart';
 
 main() => runApp(
@@ -27,7 +28,7 @@ class myApp extends StatelessWidget {
         '/carDetails': (context) => const CarDetailPage(),
         '/help': (context) => const HelpPage(),
         '/history': (context) => const HistroyPage(),
-        '/about': (context) => const AboutUsPage(),
+        '/sideNavbar': (context) => const Sidenavbar(),
       },
     );
   }

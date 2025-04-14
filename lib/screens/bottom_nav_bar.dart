@@ -146,8 +146,8 @@ class BottomNavBar extends StatelessWidget {
       onTap: () => onItemTapped(2),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        height: size,
-        width: size,
+        height: size * 0.90,
+        width: size * 0.90,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isActive
