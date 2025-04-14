@@ -1,7 +1,12 @@
+import 'package:car_crew/screens/history.dart';
+import 'package:car_crew/screens/sosServices.dart';
 import 'package:flutter/material.dart';
 import 'package:car_crew/screens/bottom_nav_bar.dart';
 import 'package:car_crew/screens/homecontent.dart';
 import 'package:car_crew/screens/services.dart';
+import 'package:car_crew/screens/sosServices.dart';
+import 'package:car_crew/screens/history.dart';
+import 'package:car_crew/screens/selectVehicle.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -17,6 +22,9 @@ class _nameState extends State<Homepage> {
   final List<Widget> _pages = [
     const HomeContent(), // Home Page
     const ServicesPage(),
+    const SosservicesPage(),
+    const HistroyPage(),
+    const Selectvehicle(),
   ];
 
   @override
