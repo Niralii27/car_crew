@@ -74,11 +74,11 @@ class BottomNavBar extends StatelessWidget {
               _buildNavItem(
                   0, Icons.home_outlined, Icons.home_rounded, iconSize, "Home"),
               _buildNavItem(1, Icons.car_crash_sharp, Icons.car_crash_sharp,
-                  iconSize, "Cars"),
+                  iconSize, "SOS"),
               SizedBox(
                   width: centerButtonSize * 0.7), // Space for center button
-              _buildNavItem(3, Icons.directions_car_sharp,
-                  Icons.directions_car_sharp, iconSize, "Rental"),
+              _buildNavItem(3, Icons.shopping_cart_outlined,
+                  Icons.shopping_cart_outlined, iconSize, "Cart"),
               _buildNavItem(4, Icons.person_outline, Icons.person_rounded,
                   iconSize, "Profile"),
             ],

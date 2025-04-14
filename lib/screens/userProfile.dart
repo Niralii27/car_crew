@@ -24,7 +24,7 @@ class ProfilePage extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: Padding(
-        padding: EdgeInsets.only(top: deviceHeight * 0.04),
+        padding: EdgeInsets.only(top: deviceHeight * 0.03),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -63,7 +63,7 @@ class ProfilePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
 
                 // Account and Car Menu Section
                 optionTile(
@@ -72,6 +72,8 @@ class ProfilePage extends StatelessWidget {
                     primaryBlue, '/carDetails'),
                 optionTile(
                     context, 'Help', Icons.help_outline, primaryBlue, '/help'),
+                optionTile(context, 'Services History', Icons.history,
+                    primaryBlue, '/history'),
                 optionTile(
                     context, 'Support', Icons.headset_mic, primaryBlue, ''),
                 optionTile(

@@ -4,6 +4,7 @@ import 'package:car_crew/screens/account.dart';
 import 'package:car_crew/screens/cardetail.dart';
 import 'package:car_crew/screens/help.dart';
 import 'package:car_crew/screens/about.dart';
+import 'package:car_crew/screens/history.dart';
 
 main() => runApp(
       myApp(),
@@ -25,6 +26,7 @@ class myApp extends StatelessWidget {
         '/account': (context) => const AccountPage(),
         '/carDetails': (context) => const CarDetailPage(),
         '/help': (context) => const HelpPage(),
+        '/history': (context) => const HistroyPage(),
         '/about': (context) => const AboutUsPage(),
       },
     );

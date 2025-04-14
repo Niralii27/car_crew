@@ -6,7 +6,7 @@ import 'package:car_crew/screens/bottom_nav_bar.dart';
 import 'package:car_crew/screens/homecontent.dart';
 import 'package:car_crew/screens/services.dart';
 import 'package:car_crew/screens/sosServices.dart';
-import 'package:car_crew/screens/history.dart';
+import 'package:car_crew/screens/cart.dart';
 import 'package:car_crew/screens/userProfile.dart';
 
 class Homepage extends StatefulWidget {
@@ -22,9 +22,9 @@ class _nameState extends State<Homepage> {
   // List of pages to display based on selected index
   final List<Widget> _pages = [
     const HomeContent(), // Home Page
-    const ServicesPage(),
     const SosservicesPage(),
-    const HistroyPage(),
+    const ServicesPage(),
+    const CartPage(),
     const ProfilePage(),
   ];
 
