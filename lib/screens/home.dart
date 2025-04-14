@@ -7,7 +7,7 @@ import 'package:car_crew/screens/homecontent.dart';
 import 'package:car_crew/screens/services.dart';
 import 'package:car_crew/screens/sosServices.dart';
 import 'package:car_crew/screens/history.dart';
-import 'package:car_crew/screens/cart.dart';
+import 'package:car_crew/screens/userProfile.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -25,7 +25,7 @@ class _nameState extends State<Homepage> {
     const ServicesPage(),
     const SosservicesPage(),
     const HistroyPage(),
-    const CartPage(),
+    const ProfilePage(),
   ];
 
   @override

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:car_crew/screens/loginpage.dart';
+import 'package:car_crew/screens/account.dart';
+import 'package:car_crew/screens/cardetail.dart';
+import 'package:car_crew/screens/help.dart';
+import 'package:car_crew/screens/about.dart';
 
 main() => runApp(
       myApp(),
@@ -17,6 +21,12 @@ class myApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: loginpage(),
+      routes: {
+        '/account': (context) => const AccountPage(),
+        '/carDetails': (context) => const CarDetailPage(),
+        '/help': (context) => const HelpPage(),
+        '/about': (context) => const AboutUsPage(),
+      },
     );
   }
 }
