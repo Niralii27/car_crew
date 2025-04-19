@@ -15,19 +15,19 @@ class _CartPageState extends State<CartPage> {
       id: '1',
       serviceName: 'Oil Change',
       price: 999,
-      imageUrl: 'assets/images/oil_change.png',
+      imageUrl: 'assets/images/service_icon1.png',
     ),
     CartItem(
       id: '2',
       serviceName: 'Wheel Alignment',
       price: 1499,
-      imageUrl: 'assets/images/wheel_alignment.png',
+      imageUrl: 'assets/images/service_icon2.png',
     ),
     CartItem(
       id: '3',
       serviceName: 'Full Car Service',
       price: 3999,
-      imageUrl: 'assets/images/full_service.png',
+      imageUrl: 'assets/images/service_icon3.png',
     ),
   ];
 

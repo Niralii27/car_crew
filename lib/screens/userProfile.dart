@@ -1,10 +1,16 @@
+import 'package:car_crew/controller/user_auth.dart';
+import 'package:car_crew/screens/loginpage.dart';
 import 'package:flutter/material.dart';
+import 'package:car_crew/controller/snackbar_controller.dart';
+import 'package:get/get.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final Snackbar _snackbar = Snackbar();
+
     final deviceWidth = MediaQuery.of(context).size.width;
     final deviceHeight = MediaQuery.of(context).size.height;
 
@@ -70,8 +76,8 @@ class ProfilePage extends StatelessWidget {
                     context, 'Account', Icons.person, primaryBlue, '/account'),
                 optionTile(context, 'Car Profile', Icons.directions_car,
                     primaryBlue, '/carDetails'),
-                optionTile(
-                    context, 'Help', Icons.help_outline, primaryBlue, '/help'),
+                optionTile(context, 'Help', Icons.help_outline, primaryBlue,
+                    '/selectVehicle'),
                 optionTile(context, 'Services History', Icons.history,
                     primaryBlue, '/history'),
                 optionTile(
@@ -80,7 +86,36 @@ class ProfilePage extends StatelessWidget {
                     '/sideNavbar'),
                 const SizedBox(height: 10),
                 optionTile(
-                    context, 'Log out', Icons.logout, Colors.redAccent, ''),
+                  context,
+                  'Log out',
+                  Icons.logout,
+                  Colors.redAccent,
+                  '',
+                 onTap: () async {
+  try {
+    await UserController.logout();
+
+    if (!context.mounted) return;
+
+    _snackbar.showCustomSnackBar(
+      context: context,
+      message: "Logged out successfully",
+      isSuccess: true,
+    );
+
+    Get.offAll(() => const loginpage()); // This also removes current context
+  } catch (e) {
+    if (!context.mounted) return;
+
+    _snackbar.showCustomSnackBar(
+      context: context,
+      message: "Failed to logout: ${e.toString()}",
+      isSuccess: false,
+    );
+  }
+},
+
+                ),
               ],
             ),
           ),
@@ -89,26 +124,36 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget optionTile(BuildContext context, String title, IconData icon,
-      Color color, String routeName) {
+  Widget optionTile(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    String routeName, {
+    VoidCallback? onTap, // ✅ Optional custom action
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: ListTile(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         tileColor: Colors.white,
         leading: Icon(icon, color: color),
-        title: Text(title,
-            style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+        ),
         trailing:
             const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-        onTap: routeName.isNotEmpty
-            ? () {
-                Navigator.pushNamed(context, routeName);
-              }
-            : null,
+        onTap: onTap ??
+            (routeName.isNotEmpty
+                ? () {
+                    Navigator.pushNamed(context, routeName);
+                  }
+                : null),
       ),
     );
   }

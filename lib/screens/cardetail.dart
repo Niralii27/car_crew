@@ -34,7 +34,7 @@ class _CarDetailPageState extends State<CarDetailPage> {
             Center(
               child: CircleAvatar(
                 radius: 70,
-                backgroundImage: AssetImage('assets/fortuner.jpg'),
+                backgroundImage: AssetImage('assets/car_profile.png'),
               ),
             ),
             const SizedBox(height: 20),
