@@ -1,8 +1,10 @@
 import 'package:car_crew/screens/loginpage.dart';
+import 'package:car_crew/services/firebase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:car_crew/screens/registration.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
+import 'package:get/get.dart';
 
 class ForgotpasswordPage extends StatefulWidget {
   const ForgotpasswordPage({super.key});
@@ -12,6 +14,36 @@ class ForgotpasswordPage extends StatefulWidget {
 }
 
 class _ForgotpasswordState extends State<ForgotpasswordPage> {
+
+  final TextEditingController emailController=TextEditingController();
+   final FirebaseServices _firebaseService=FirebaseServices();
+ 
+    void resetPassword() async {
+   final email = emailController.text.trim();
+ 
+   if (email.isEmpty) {
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(content: Text('Please enter your email')),
+     );
+     return;
+   }
+ 
+   final result = await _firebaseService.sendPasswordResetEmail(email);
+ 
+   if (result == null) {
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(content: Text('Password reset link sent to $email')),
+     );
+ 
+     await Future.delayed(const Duration(seconds: 2));
+     Get.offAll(() => loginpage());
+   } else {
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(content: Text(result)),
+     );
+   }
+ }
+ 
   @override
   Widget build(BuildContext context) {
     final deviceHeight = MediaQuery.of(context).size.height;
@@ -93,6 +125,7 @@ class _ForgotpasswordState extends State<ForgotpasswordPage> {
                         ),
                         child: Center(
                           child: TextField(
+                            controller: emailController,
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               hintText: 'Email',
@@ -110,12 +143,13 @@ class _ForgotpasswordState extends State<ForgotpasswordPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Navigate to Registration page
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => loginpage()),
-                          );
+                          // // Navigate to Registration page
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //       builder: (context) => loginpage()),
+                          // );
+                          resetPassword();
                         },
                         child: Text(
                           'Reset Password',
