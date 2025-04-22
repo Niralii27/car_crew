@@ -1,4 +1,5 @@
 import 'package:car_crew/screens/admin_add_category.dart';
+import 'package:car_crew/screens/editcategory.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -165,22 +166,22 @@ class _AdminServicesState extends State<AdminServices> {
 }
 
 // Edit Category Screen (placeholder - implement as needed)
-class EditCategoryScreen extends StatelessWidget {
-  final String serviceId;
+// class EditCategoryScreen extends StatelessWidget {
+//   final String serviceId;
 
-  const EditCategoryScreen({Key? key, required this.serviceId})
-      : super(key: key);
+//   const EditCategoryScreen({Key? key, required this.serviceId})
+//       : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Edit Category')),
-      body: Center(
-        child: Text('Edit category with ID: $serviceId'),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: Text('Edit Category')),
+//       body: Center(
+//         child: Text('Edit category with ID: $serviceId'),
+//       ),
+//     );
+//   }
+// }
 
 class Service {
   final String id;
