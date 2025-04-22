@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class EditCategoryScreen extends StatefulWidget {
   final String serviceId;
@@ -18,12 +15,10 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _imageUrlController = TextEditingController();
 
   bool _isLoading = true;
   bool _isSaving = false;
-  String? _currentImageUrl;
-  File? _imageFile;
-  bool _imageChanged = false;
 
   @override
   void initState() {
@@ -43,12 +38,12 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
         setState(() {
           _nameController.text = data['name'] ?? '';
           _descriptionController.text = data['description'] ?? '';
-          _currentImageUrl = data['imageUrl'];
+          _imageUrlController.text = data['imageUrl'] ?? '';
           _isLoading = false;
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Category not found')),
+          const SnackBar(content: Text('Category not found')),
         );
         Navigator.pop(context);
       }
@@ -62,41 +57,6 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
     }
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-        _imageChanged = true;
-      });
-    }
-  }
-
-  Future<String?> _uploadImage() async {
-    if (!_imageChanged || _imageFile == null) return _currentImageUrl;
-
-    try {
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('service_categories')
-          .child(
-              '${widget.serviceId}_${DateTime.now().millisecondsSinceEpoch}');
-
-      final uploadTask = storageRef.putFile(_imageFile!);
-      final snapshot = await uploadTask;
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-
-      return downloadUrl;
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload image: $e')),
-      );
-      return null;
-    }
-  }
-
   Future<void> _saveCategory() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -105,28 +65,19 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
     });
 
     try {
-      // Upload image if changed
-      final imageUrl = await _uploadImage();
-      if (_imageChanged && imageUrl == null) {
-        setState(() {
-          _isSaving = false;
-        });
-        return;
-      }
-
-      // Update Firestore document
+      // Update Firestore document with the image URL directly
       await FirebaseFirestore.instance
           .collection('service_categories')
           .doc(widget.serviceId)
           .update({
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
-        if (_imageChanged) 'imageUrl': imageUrl,
+        'imageUrl': _imageUrlController.text.trim(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Category updated successfully')),
+        const SnackBar(content: Text('Category updated successfully')),
       );
       Navigator.pop(context);
     } catch (e) {
@@ -143,6 +94,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -150,82 +102,105 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Service Category',
+        title: const Text('Edit Service Category',
             style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Image selection
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: _imageFile != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.file(
-                                  _imageFile!,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : _currentImageUrl != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      _currentImageUrl!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Center(
-                                          child: Icon(
-                                            Icons.image_not_supported,
-                                            size: 50,
-                                            color: Colors.grey[500],
-                                          ),
-                                        );
-                                      },
+                    // Image preview
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _imageUrlController.text.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                _imageUrlController.text,
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value:
+                                          loadingProgress.expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  (loadingProgress
+                                                          .expectedTotalBytes ??
+                                                      1)
+                                              : null,
                                     ),
-                                  )
-                                : Center(
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Center(
                                     child: Icon(
-                                      Icons.add_photo_alternate,
+                                      Icons.image_not_supported,
                                       size: 50,
                                       color: Colors.grey[500],
                                     ),
-                                  ),
-                      ),
+                                  );
+                                },
+                              ),
+                            )
+                          : Center(
+                              child: Icon(
+                                Icons.image,
+                                size: 50,
+                                color: Colors.grey[500],
+                              ),
+                            ),
                     ),
-                    SizedBox(height: 8),
-                    Center(
-                      child: TextButton.icon(
-                        icon: Icon(Icons.photo_library),
-                        label: Text('Change Image'),
-                        onPressed: _pickImage,
+                    const SizedBox(height: 16),
+
+                    // Image URL field
+                    TextFormField(
+                      controller: _imageUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Image URL',
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintText: 'Enter online image URL',
                       ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter an image URL';
+                        }
+                        if (!Uri.tryParse(value)!.isAbsolute) {
+                          return 'Please enter a valid URL';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        // Update the preview when URL changes
+                        setState(() {});
+                      },
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
                     // Name field
                     TextFormField(
                       controller: _nameController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Service Name',
                         border: OutlineInputBorder(),
                         filled: true,
@@ -238,12 +213,12 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     // Description field
                     TextFormField(
                       controller: _descriptionController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Description',
                         border: OutlineInputBorder(),
                         filled: true,
@@ -257,21 +232,21 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
                     // Save button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       onPressed: _isSaving ? null : _saveCategory,
                       child: _isSaving
-                          ? SizedBox(
+                          ? const SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(
@@ -279,7 +254,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : Text('SAVE CHANGES'),
+                          : const Text('SAVE CHANGES'),
                     ),
                   ],
                 ),
