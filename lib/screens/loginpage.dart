@@ -1,5 +1,7 @@
 import 'package:car_crew/controller/snackbar_controller.dart';
 import 'package:car_crew/controller/user_auth.dart';
+import 'package:car_crew/screens/admin_dashboard.dart';
+import 'package:car_crew/screens/admin_home.dart';
 import 'package:car_crew/screens/forgotPassword.dart';
 import 'package:car_crew/screens/home.dart';
 import 'package:car_crew/screens/registration.dart';
@@ -188,7 +190,13 @@ class _loginpageState extends State<loginpage> {
 
                             if (credential.user != null) {
                               print("✅ Login successful");
-                              Get.to(() => Homepage());
+                              //Get.to(() => Homepage());
+                              if (email == "admin7@gmail.com" &&
+                                  password == "Admin@2727") {
+                                Get.to(() => AdminHomepage());
+                              } else {
+                                Get.to(() => Homepage());
+                              }
                             }
                           } on FirebaseAuthException catch (e) {
                             print(
