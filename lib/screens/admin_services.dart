@@ -1,4 +1,6 @@
+import 'package:car_crew/screens/add_admin_services.dart';
 import 'package:car_crew/screens/admin_add_category.dart';
+import 'package:car_crew/screens/admin_product.dart';
 import 'package:car_crew/screens/editcategory.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -52,7 +54,35 @@ class _AdminServicesState extends State<AdminServices> {
                   MaterialPageRoute(builder: (context) => AdminAddCategory()),
                 );
               },
+              child: Text("ADD SERVICES Category"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminAddProduct()),
+                );
+              },
               child: Text("ADD SERVICES"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminProduct()),
+                );
+              },
+              child: Text("SHOW SERVICES"),
             ),
             SizedBox(height: 16),
             Expanded(

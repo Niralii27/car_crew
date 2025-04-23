@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:car_crew/screens/admin_sidebar.dart';
 import 'package:flutter/material.dart';
 // import 'package/car_crew/settings_screen.dart';
 // import 'sos_services_screen.dart';
@@ -56,6 +57,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final deviceWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SafeArea(
@@ -70,11 +73,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 25,
-                        backgroundImage: AssetImage('assets/profile.png'),
+                      // Logo
+                      GestureDetector(
+                        onTap: () {
+                          // Open the side panel using Navigator.push
+                          Navigator.of(context).push(
+                            _createSidePanelRoute(),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: deviceWidth * 0.07,
+                          backgroundImage: AssetImage('assets/profile.png'),
+                        ),
                       ),
-                      SizedBox(width: 10),
+                      SizedBox(width: deviceWidth * 0.03),
                       Text(
                         'Welcome, Admin',
                         style: TextStyle(
@@ -201,37 +213,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
 
       // 🔽 Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: currentIndex,
-        onTap: (index) {
-          if (index == 1) {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => const SosServicesScreen()),
-            // );
-          } else if (index == 2) {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => const SettingsScreen()),
-            // );
-          } else {
-            setState(() {
-              currentIndex = index;
-            });
-          }
-        },
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white70,
-        backgroundColor: Colors.blue,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.local_car_wash), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.car_repair), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
-      ),
     );
   }
 
@@ -256,4 +237,31 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
     );
   }
+}
+
+PageRouteBuilder _createSidePanelRoute() {
+  return PageRouteBuilder(
+    opaque: false,
+    barrierDismissible: true,
+    barrierColor: Colors.black54,
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: AdminSidenavBar(),
+      );
+    },
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(-1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOut;
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
 }

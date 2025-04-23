@@ -77,7 +77,7 @@ class _SideNavbarState extends State<AdminSidenavBar> {
 
           // User name
           const Text(
-            'Nirali Akbari',
+            'Admin',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,

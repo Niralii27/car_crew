@@ -77,8 +77,21 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Category updated successfully')),
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.system_update_alt, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Category updated successfully'),
+            ],
+          ),
+          backgroundColor: Colors.blueAccent,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          duration: Duration(seconds: 3),
+        ),
       );
+
       Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
