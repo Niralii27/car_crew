@@ -1,20 +1,18 @@
 import 'package:car_crew/screens/add_admin_services.dart';
 import 'package:car_crew/screens/admin_add_category.dart';
 import 'package:car_crew/screens/admin_add_sos_category.dart';
-import 'package:car_crew/screens/admin_add_sos_services.dart';
+import 'package:car_crew/screens/admin_edit_sos_category.dart';
 import 'package:car_crew/screens/admin_product.dart';
-import 'package:car_crew/screens/admin_sos_product.dart';
-import 'package:car_crew/screens/admin_sos_services.dart';
 import 'package:car_crew/screens/editcategory.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AdminServices extends StatefulWidget {
+class AdminSOSServices extends StatefulWidget {
   @override
-  State<AdminServices> createState() => _AdminServicesState();
+  State<AdminSOSServices> createState() => _AdminSOSServicesState();
 }
 
-class _AdminServicesState extends State<AdminServices> {
+class _AdminSOSServicesState extends State<AdminSOSServices> {
   // Stream for Firestore data
   late Stream<QuerySnapshot> _categoriesStream;
 
@@ -23,7 +21,7 @@ class _AdminServicesState extends State<AdminServices> {
     super.initState();
     // Initialize the stream to listen for service categories
     _categoriesStream = FirebaseFirestore.instance
-        .collection('service_categories')
+        .collection('sos_categories')
         .orderBy('createdAt', descending: true)
         .snapshots();
   }
@@ -32,7 +30,7 @@ class _AdminServicesState extends State<AdminServices> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Periodic Services", style: TextStyle(color: Colors.black)),
+        title: Text("SOS Services", style: TextStyle(color: Colors.black)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
@@ -41,87 +39,6 @@ class _AdminServicesState extends State<AdminServices> {
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: Colors.black),
-            onSelected: (String value) {
-              if (value == 'show') {
-                // Navigate to Show Services page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminAddCategory()),
-                );
-              } else if (value == 'add') {
-                // Navigate to Add Services page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminAddProduct()),
-                );
-              } else if (value == 'showproduct') {
-                // Navigate to Add Services page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminProduct()),
-                );
-              } else if (value == 'addsos') {
-                // Navigate to Add Services page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => AdminAddSOSCategory()),
-                );
-              } else if (value == 'showsos') {
-                // Navigate to Add Services page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminSOSServices()),
-                );
-              } else if (value == 'addsosproduct') {
-                // Navigate to Add Services page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminAddSOSProduct()),
-                );
-              } else if (value == 'showsosproduct') {
-                // Navigate to Add Services page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminSOSProduct()),
-                );
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'show',
-                child: Text('Add Services Category'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'add',
-                child: Text('Add Services'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'showproduct',
-                child: Text('Show Services Product'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'addsos',
-                child: Text('Add SOS Services'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'showsos',
-                child: Text('Show SOS Services'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'addsosproduct',
-                child: Text('Add SOS Services Product'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'showsosproduct',
-                child: Text('Show SOS Services Product'),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -234,7 +151,7 @@ class _AdminServicesState extends State<AdminServices> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditCategoryScreen(serviceId: service.id),
+        builder: (context) => EditSOSCategoryScreen(serviceId: service.id),
       ),
     );
   }
@@ -246,7 +163,7 @@ class _AdminServicesState extends State<AdminServices> {
           context: context,
           builder: (context) => AlertDialog(
             title: Text('Delete Category'),
-            content: Text('Are you sure you want to delete this category?'),
+            content: Text('Are you sure you want to delete this sos category?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -265,7 +182,7 @@ class _AdminServicesState extends State<AdminServices> {
 
     try {
       await FirebaseFirestore.instance
-          .collection('service_categories')
+          .collection('sos_categories')
           .doc(categoryId)
           .delete();
 
@@ -279,24 +196,6 @@ class _AdminServicesState extends State<AdminServices> {
     }
   }
 }
-
-// Edit Category Screen (placeholder - implement as needed)
-// class EditCategoryScreen extends StatelessWidget {
-//   final String serviceId;
-
-//   const EditCategoryScreen({Key? key, required this.serviceId})
-//       : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Edit Category')),
-//       body: Center(
-//         child: Text('Edit category with ID: $serviceId'),
-//       ),
-//     );
-//   }
-// }
 
 class Service {
   final String id;
