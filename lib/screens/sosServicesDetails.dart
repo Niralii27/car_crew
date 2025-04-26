@@ -33,7 +33,7 @@ class _SosservicesDetailsState extends State<SosservicesdetailsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Services details",
+          "SOS Services details",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: deviceWidth * 0.06,

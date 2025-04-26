@@ -1,3 +1,4 @@
+import 'package:car_crew/screens/cartProvider.dart';
 import 'package:car_crew/screens/sideNavbar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:car_crew/firebase_options.dart';
@@ -9,13 +10,23 @@ import 'package:car_crew/screens/selectVehicle.dart';
 import 'package:car_crew/screens/sideNavbar.dart';
 import 'package:car_crew/screens/history.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
+
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(myApp());
+  runApp(  MultiProvider(
+      providers: [
+       ChangeNotifierProvider(
+          create: (ctx) => CartProvider(),
+        ),
+      ],
+      child: const myApp(),
+  ),
+  );
 }
 
 class myApp extends StatelessWidget {

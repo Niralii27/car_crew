@@ -54,7 +54,7 @@ class _SosservicesState extends State<SosservicesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Services",
+          "SOS Services",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: deviceWidth * 0.06,
@@ -187,9 +187,9 @@ class ServiceCard extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => SosservicesdetailsPage(
-                        serviceId:
-                            service.id, // Pass the service ID to the details page
-                        ),
+                      serviceId:
+                          service.id, // Pass the service ID to the details page
+                    ),
                   ),
                 );
               },

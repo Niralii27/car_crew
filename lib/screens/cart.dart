@@ -1,50 +1,10 @@
-import 'package:car_crew/screens/checkout.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:car_crew/screens/cartProvider.dart';
+import 'package:car_crew/screens/checkout.dart' as checkout;
 
-class CartPage extends StatefulWidget {
+class CartPage extends StatelessWidget {
   const CartPage({Key? key}) : super(key: key);
-
-  @override
-  _CartPageState createState() => _CartPageState();
-}
-
-class _CartPageState extends State<CartPage> {
-  // Sample cart items (you will replace with your actual data model)
-  List<CartItem> cartItems = [
-    CartItem(
-      id: '1',
-      serviceName: 'Oil Change',
-      price: 999,
-      imageUrl: 'assets/images/service_icon1.png',
-    ),
-    CartItem(
-      id: '2',
-      serviceName: 'Wheel Alignment',
-      price: 1499,
-      imageUrl: 'assets/images/service_icon2.png',
-    ),
-    CartItem(
-      id: '3',
-      serviceName: 'Full Car Service',
-      price: 3999,
-      imageUrl: 'assets/images/service_icon3.png',
-    ),
-  ];
-
-  // Calculate total price
-  double get totalPrice {
-    return cartItems.fold(0, (sum, item) => sum + item.price);
-  }
-
-  // Remove item from cart
-  void removeItem(String id) {
-    setState(() {
-      cartItems.removeWhere((item) => item.id == id);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Service removed from cart')),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,16 +17,28 @@ class _CartPageState extends State<CartPage> {
         title: const Text('My Cart'),
         backgroundColor: Colors.blue[800],
       ),
-      body: cartItems.isEmpty
-          ? _buildEmptyCart(screenSize)
-          : _buildCartContent(screenSize, isSmallScreen),
-      bottomNavigationBar: cartItems.isEmpty
-          ? null
-          : _buildCheckoutBar(context, screenSize, isSmallScreen),
+      body: Consumer<CartProvider>(
+        builder: (context, cart, child) {
+          if (cart.items.isEmpty) {
+            return _buildEmptyCart(screenSize, context);
+          } else {
+            return _buildCartContent(screenSize, isSmallScreen, cart);
+          }
+        },
+      ),
+      bottomNavigationBar: Consumer<CartProvider>(
+        builder: (context, cart, child) {
+          if (cart.items.isEmpty) {
+            return SizedBox.shrink(); // Return an empty widget instead of null
+          } else {
+            return _buildCheckoutBar(context, screenSize, isSmallScreen, cart);
+          }
+        },
+      ),
     );
   }
 
-  Widget _buildEmptyCart(Size screenSize) {
+  Widget _buildEmptyCart(Size screenSize, BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -111,16 +83,16 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Widget _buildCartContent(Size screenSize, bool isSmallScreen) {
+  Widget _buildCartContent(Size screenSize, bool isSmallScreen, CartProvider cart) {
     return Column(
       children: [
         Expanded(
           child: ListView.builder(
             padding: EdgeInsets.all(isSmallScreen ? 10 : 20),
-            itemCount: cartItems.length,
+            itemCount: cart.items.length,
             itemBuilder: (context, index) {
-              final item = cartItems[index];
-              return _buildCartItemCard(item, screenSize, isSmallScreen);
+              final item = cart.items[index];
+              return _buildCartItemCard(item, screenSize, isSmallScreen, cart, context);
             },
           ),
         ),
@@ -129,7 +101,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildCartItemCard(
-      CartItem item, Size screenSize, bool isSmallScreen) {
+      CartItem item, Size screenSize, bool isSmallScreen, CartProvider cart, BuildContext context) {
     return Card(
       margin: EdgeInsets.only(bottom: isSmallScreen ? 10 : 15),
       elevation: 2,
@@ -149,7 +121,7 @@ class _CartPageState extends State<CartPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
+                child: Image.network(
                   item.imageUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (ctx, error, _) => Icon(
@@ -187,7 +159,12 @@ class _CartPageState extends State<CartPage> {
             ),
             // Remove button
             IconButton(
-              onPressed: () => removeItem(item.id),
+              onPressed: () {
+                cart.removeItem(item.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Service removed from cart')),
+                );
+              },
               icon: const Icon(Icons.delete_outline, color: Colors.red),
               iconSize: isSmallScreen ? 22 : 24,
             ),
@@ -198,7 +175,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   Widget _buildCheckoutBar(
-      BuildContext context, Size screenSize, bool isSmallScreen) {
+      BuildContext context, Size screenSize, bool isSmallScreen, CartProvider cart) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isSmallScreen ? 15 : 25,
@@ -231,7 +208,7 @@ class _CartPageState extends State<CartPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '₹${totalPrice.toStringAsFixed(2)}',
+                    '₹${cart.totalAmount.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: isSmallScreen ? 18 : 22,
                       fontWeight: FontWeight.bold,
@@ -247,18 +224,24 @@ class _CartPageState extends State<CartPage> {
                   : screenSize.width * 0.3,
               child: ElevatedButton(
                 onPressed: () {
+                  // Convert CartItem to checkout.CartItem
+                  List<checkout.CartItem> checkoutItems = cart.items.map((item) => 
+                    checkout.CartItem(
+                      id: item.id,
+                      serviceName: item.serviceName,
+                      price: item.price,
+                      imageUrl: item.imageUrl,
+                    )
+                  ).toList();
+                  
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CheckoutPage(
-                        cartItems: [],
-                        totalAmount: 500,
+                      builder: (context) => checkout.CheckoutPage(
+                        cartItems: checkoutItems,
+                        totalAmount: cart.totalAmount,
                       ),
                     ),
-                  );
-                  // Handle checkout logic
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Proceeding to checkout...')),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -284,40 +267,4 @@ class _CartPageState extends State<CartPage> {
       ),
     );
   }
-}
-
-// Model class for cart items
-class CartItem {
-  final String id;
-  final String serviceName;
-  final double price;
-  final String imageUrl;
-
-  CartItem({
-    required this.id,
-    required this.serviceName,
-    required this.price,
-    required this.imageUrl,
-  });
-}
-
-// Example usage in your main app
-class CarServiceApp extends StatelessWidget {
-  const CarServiceApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Car Service App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: const CartPage(),
-    );
-  }
-}
-
-void main() {
-  runApp(const CarServiceApp());
 }
