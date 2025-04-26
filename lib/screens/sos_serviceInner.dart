@@ -1,15 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class Serviceinner extends StatefulWidget {
+class sosServiceinner extends StatefulWidget {
   final String productId;
 
-  const Serviceinner({required this.productId, Key? key}) : super(key: key);
+  const sosServiceinner({required this.productId, Key? key}) : super(key: key);
   @override
-  State<Serviceinner> createState() => _ServiceinnerState();
+  State<sosServiceinner> createState() => _sosServiceinnerState();
 }
 
-class _ServiceinnerState extends State<Serviceinner> {
+class _sosServiceinnerState extends State<sosServiceinner> {
   // Stream for specific product document
   late Stream<DocumentSnapshot> _productStream;
 
@@ -18,7 +18,7 @@ class _ServiceinnerState extends State<Serviceinner> {
     super.initState();
     // Initialize the stream to listen for the specific product
     _productStream = FirebaseFirestore.instance
-        .collection('service_products')
+        .collection('sos_products')
         .doc(widget.productId)
         .snapshots();
   }

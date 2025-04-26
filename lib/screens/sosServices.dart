@@ -1,14 +1,52 @@
-import 'package:flutter/material.dart';
+import 'package:car_crew/screens/servicesDetails.dart';
 import 'package:car_crew/screens/sosServicesDetails.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Model class for service categories
+class ServiceCategory {
+  final String id;
+  final String name;
+  final String description;
+  final String imageUrl;
+  final double originalPrice;
+  final double discountedPrice;
+
+  ServiceCategory({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.imageUrl,
+    required this.originalPrice,
+    required this.discountedPrice,
+  });
+
+  // Factory constructor to create a ServiceCategory from Firestore data
+  factory ServiceCategory.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return ServiceCategory(
+      id: doc.id,
+      name: data['name'] ?? 'Service Title',
+      description: data['description'] ?? 'No description available',
+      imageUrl: data['imageUrl'] ?? '',
+      originalPrice: (data['originalPrice'] ?? 0).toDouble(),
+      discountedPrice: (data['discountedPrice'] ?? 0).toDouble(),
+    );
+  }
+}
 
 class SosservicesPage extends StatefulWidget {
-  const SosservicesPage({super.key});
+  const SosservicesPage({Key? key}) : super(key: key);
 
   @override
   State<SosservicesPage> createState() => _SosservicesState();
 }
 
 class _SosservicesState extends State<SosservicesPage> {
+  // Reference to the Firestore collection
+  final CollectionReference _serviceCategories =
+      FirebaseFirestore.instance.collection('sos_categories');
+
   @override
   Widget build(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
@@ -16,7 +54,7 @@ class _SosservicesState extends State<SosservicesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Emergency Services",
+          "Services",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: deviceWidth * 0.06,
@@ -26,31 +64,51 @@ class _SosservicesState extends State<SosservicesPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              ServiceCard(),
-              ServiceCard(),
-              ServiceCard(),
-              ServiceCard(),
-              ServiceCard(),
-              ServiceCard(),
-              ServiceCard(),
-            ],
-          ),
-        ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _serviceCategories.snapshots(),
+        builder: (context, snapshot) {
+          // Handle loading state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Handle error state
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          // Handle empty data
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No service categories found'));
+          }
+
+          // Process data and build UI
+          final serviceDocs = snapshot.data!.docs;
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: serviceDocs.map((doc) {
+                  final service = ServiceCategory.fromFirestore(doc);
+                  return ServiceCard(service: service);
+                }).toList(),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 }
 
 class ServiceCard extends StatelessWidget {
+  final ServiceCategory service;
+
+  const ServiceCard({required this.service, Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    final deviceWidth = MediaQuery.of(context).size.width;
-
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
@@ -62,12 +120,27 @@ class ServiceCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                "assets/car_service_img1.png",
-                width: MediaQuery.of(context).size.width * 0.2,
-                height: MediaQuery.of(context).size.width * 0.2,
-                fit: BoxFit.cover,
-              ),
+              child: service.imageUrl.isNotEmpty
+                  ? Image.network(
+                      service.imageUrl,
+                      width: MediaQuery.of(context).size.width * 0.2,
+                      height: MediaQuery.of(context).size.width * 0.2,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          "assets/car_service_img1.png",
+                          width: MediaQuery.of(context).size.width * 0.2,
+                          height: MediaQuery.of(context).size.width * 0.2,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      "assets/car_service_img1.png",
+                      width: MediaQuery.of(context).size.width * 0.2,
+                      height: MediaQuery.of(context).size.width * 0.2,
+                      fit: BoxFit.cover,
+                    ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -75,36 +148,36 @@ class ServiceCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Car Service",
+                    service.name,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Every 10000 Kms / 5 Months\nIncludes 15 services\nTakes 5 Hours",
+                    service.description,
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Text(
-                        "\$70",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        "\$50",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Row(
+                  //   children: [
+                  //     Text(
+                  //       "\$${service.originalPrice.toStringAsFixed(0)}",
+                  //       style: TextStyle(
+                  //         fontSize: 12,
+                  //         color: Colors.grey,
+                  //         decoration: TextDecoration.lineThrough,
+                  //       ),
+                  //     ),
+                  //     const SizedBox(width: 5),
+                  //     Text(
+                  //       "\$${service.discountedPrice.toStringAsFixed(0)}",
+                  //       style: TextStyle(
+                  //         fontSize: 14,
+                  //         fontWeight: FontWeight.bold,
+                  //         color: Colors.blue,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               ),
             ),
@@ -112,7 +185,12 @@ class ServiceCard extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SosservicesdetailsPage()),
+                  MaterialPageRoute(
+                    builder: (context) => SosservicesdetailsPage(
+                        serviceId:
+                            service.id, // Pass the service ID to the details page
+                        ),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
