@@ -1,3 +1,4 @@
+import 'package:car_crew/controller/user_auth.dart';
 import 'package:car_crew/screens/cartProvider.dart';
 import 'package:car_crew/screens/sideNavbar.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -18,6 +19,9 @@ void main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+    Get.put(UserController());
+
   runApp(  MultiProvider(
       providers: [
        ChangeNotifierProvider(

@@ -1,6 +1,9 @@
 import 'package:car_crew/screens/sideNavbar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:get/get.dart';
 
 class HomeContent extends StatefulWidget {
   const HomeContent({Key? key}) : super(key: key);
@@ -10,6 +13,9 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
+  String? userId;
+  String userName = "User";
+
   late PageController _pageController;
   int currentIndex = 0;
 
@@ -33,6 +39,19 @@ class _HomeContentState extends State<HomeContent> {
   @override
   void initState() {
     super.initState();
+
+    // Get the arguments passed from the login page
+    final args = Get.arguments;
+    if (args != null && args is Map<String, dynamic>) {
+      userId = args['userId'];
+      print("User ID received: $userId");
+
+      // Fetch user data once we have the ID
+      if (userId != null) {
+        fetchUserName();
+      }
+    }
+
     _pageController = PageController(initialPage: 0);
 
     Timer.periodic(Duration(seconds: 3), (Timer timer) {
@@ -53,6 +72,25 @@ class _HomeContentState extends State<HomeContent> {
         }
       }
     });
+  }
+
+  Future<void> fetchUserName() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('UsersTbl')
+          .doc(userId)
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        Map<String, dynamic> userData = doc.data() as Map<String, dynamic>;
+        setState(() {
+          // Replace 'UserName' with whatever field you use in your Firestore
+          userName = userData['UserName'] ?? "User";
+        });
+      }
+    } catch (e) {
+      print("Error fetching user name: $e");
+    }
   }
 
   @override
@@ -100,7 +138,7 @@ class _HomeContentState extends State<HomeContent> {
 
                               // Name
                               Text(
-                                'Nirali Akbari',
+                                userName,
                                 style: TextStyle(
                                   fontSize: deviceWidth * 0.04,
                                   fontWeight: FontWeight.bold,

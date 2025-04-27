@@ -190,12 +190,15 @@ class _loginpageState extends State<loginpage> {
 
                             if (credential.user != null) {
                               print("✅ Login successful");
+                              final userId = credential.user!.uid;
+
                               //Get.to(() => Homepage());
                               if (email == "admin7@gmail.com" &&
                                   password == "Admin@2727") {
                                 Get.to(() => AdminHomepage());
                               } else {
-                                Get.to(() => Homepage());
+                                Get.to(() => Homepage(),
+                                    arguments: {'userId': userId});
                               }
                             }
                           } on FirebaseAuthException catch (e) {
@@ -256,7 +259,12 @@ class _loginpageState extends State<loginpage> {
                             if (querySnapshot.docs.isNotEmpty) {
                               // User exists in Firestore - direct to dashboard
                               print('✅ User is registered → Go to dashboard');
-                              Get.to(() => Homepage());
+
+                              final userId = FirebaseAuth.instance.currentUser
+                                  ?.uid; // pass the userid 
+
+                              Get.to(() => Homepage(),
+                                  arguments: {'userId': userId});
                             } else {
                               // User doesn't exist in Firestore - sign them out and ask to register
                               print(
