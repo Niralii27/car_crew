@@ -64,7 +64,7 @@ class _AccountPageState extends State<AccountPage> {
             emailController.text = userDoc['UserEmail'] ?? '';
             addressController.text = userDoc['address'] ?? '';
             cityController.text = userDoc['city'] ?? '';
-            phoneController.text = userDoc['phone'] ?? '';
+            phoneController.text = userDoc['phoneNo'] ?? '';
             _profileImageUrl = userDoc['UserImage']; // Get the stored image URL
           });
         } else {

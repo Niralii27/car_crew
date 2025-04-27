@@ -1,11 +1,60 @@
 import 'package:car_crew/controller/user_auth.dart';
 import 'package:car_crew/screens/loginpage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:car_crew/controller/snackbar_controller.dart';
 import 'package:get/get.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String? userId;
+  String userName = "User";
+  String userImage = "User";
+  String createdat = "User";
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Get the arguments passed from the login page
+    final args = Get.arguments;
+    if (args != null && args is Map<String, dynamic>) {
+      userId = args['userId'];
+      print("User ID received: $userId");
+
+      // Fetch user data once we have the ID
+      if (userId != null) {
+        fetchUserName();
+      }
+    }
+  }
+
+  Future<void> fetchUserName() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('UsersTbl')
+          .doc(userId)
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        Map<String, dynamic> userData = doc.data() as Map<String, dynamic>;
+        setState(() {
+          // Replace 'UserName' with whatever field you use in your Firestore
+          userName = userData['UserName'] ?? "User";
+          userImage = userData['UserImage'] ?? "";
+          createdat = userData['UserEmail'] ?? "User";
+        });
+      }
+    } catch (e) {
+      print("Error fetching user name: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,22 +97,23 @@ class ProfilePage extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 35,
-                        backgroundImage: AssetImage('assets/user.jpg'),
+                        backgroundImage: userImage.isNotEmpty
+                            ? NetworkImage(userImage)
+                            : AssetImage('assets/user.png') as ImageProvider,
                       ),
                       const SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('Felicia Lopez',
+                        children: [
+                          Text(userName,
                               style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black)),
                           SizedBox(height: 6),
-                          Text('Joined Sep 2020',
-                              style: TextStyle(color: Colors.grey)),
+                          Text(createdat, style: TextStyle(color: Colors.grey)),
                         ],
                       ),
                     ],
@@ -91,30 +141,30 @@ class ProfilePage extends StatelessWidget {
                   Icons.logout,
                   Colors.redAccent,
                   '',
-                 onTap: () async {
-  try {
-    await UserController.logout();
+                  onTap: () async {
+                    try {
+                      await UserController.logout();
 
-    if (!context.mounted) return;
+                      if (!context.mounted) return;
 
-    _snackbar.showCustomSnackBar(
-      context: context,
-      message: "Logged out successfully",
-      isSuccess: true,
-    );
+                      _snackbar.showCustomSnackBar(
+                        context: context,
+                        message: "Logged out successfully",
+                        isSuccess: true,
+                      );
 
-    Get.offAll(() => const loginpage()); // This also removes current context
-  } catch (e) {
-    if (!context.mounted) return;
+                      Get.offAll(() =>
+                          const loginpage()); // This also removes current context
+                    } catch (e) {
+                      if (!context.mounted) return;
 
-    _snackbar.showCustomSnackBar(
-      context: context,
-      message: "Failed to logout: ${e.toString()}",
-      isSuccess: false,
-    );
-  }
-},
-
+                      _snackbar.showCustomSnackBar(
+                        context: context,
+                        message: "Failed to logout: ${e.toString()}",
+                        isSuccess: false,
+                      );
+                    }
+                  },
                 ),
               ],
             ),

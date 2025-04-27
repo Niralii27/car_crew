@@ -15,6 +15,7 @@ class HomeContent extends StatefulWidget {
 class _HomeContentState extends State<HomeContent> {
   String? userId;
   String userName = "User";
+  String userImage = "User";
 
   late PageController _pageController;
   int currentIndex = 0;
@@ -86,6 +87,7 @@ class _HomeContentState extends State<HomeContent> {
         setState(() {
           // Replace 'UserName' with whatever field you use in your Firestore
           userName = userData['UserName'] ?? "User";
+          userImage = userData['UserImage'] ?? ""; // Yeh line add karni hai
         });
       }
     } catch (e) {
@@ -129,9 +131,11 @@ class _HomeContentState extends State<HomeContent> {
                                   );
                                 },
                                 child: CircleAvatar(
-                                  radius: deviceWidth * 0.07,
-                                  backgroundImage:
-                                      AssetImage('assets/profile.png'),
+                                  radius: deviceWidth * 0.06,
+                                  backgroundImage: userImage.isNotEmpty
+                                      ? NetworkImage(userImage)
+                                      : AssetImage('assets/profile.png')
+                                          as ImageProvider,
                                 ),
                               ),
                               SizedBox(width: deviceWidth * 0.03),
@@ -149,7 +153,7 @@ class _HomeContentState extends State<HomeContent> {
 
                           // Notification Icon
                           CircleAvatar(
-                            radius: deviceWidth * 0.07,
+                            radius: deviceWidth * 0.06,
                             backgroundImage:
                                 AssetImage('assets/car_profile.png'),
                           )
