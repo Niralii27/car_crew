@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:car_crew/screens/cartProvider.dart';
@@ -11,6 +12,7 @@ class CartPage extends StatelessWidget {
     // Get screen size for responsive design
     final Size screenSize = MediaQuery.of(context).size;
     final bool isSmallScreen = screenSize.width < 600;
+    final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
       appBar: AppBar(
@@ -19,10 +21,14 @@ class CartPage extends StatelessWidget {
       ),
       body: Consumer<CartProvider>(
         builder: (context, cart, child) {
-          if (cart.items.isEmpty) {
+          final userCartItems =
+              cart.items.where((item) => item.userId == userId).toList();
+
+          if (userCartItems.isEmpty) {
             return _buildEmptyCart(screenSize, context);
           } else {
-            return _buildCartContent(screenSize, isSmallScreen, cart);
+            return _buildCartContent(
+                screenSize, isSmallScreen, cart, userCartItems);
           }
         },
       ),
@@ -83,16 +89,18 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCartContent(Size screenSize, bool isSmallScreen, CartProvider cart) {
+  Widget _buildCartContent(Size screenSize, bool isSmallScreen,
+      CartProvider cart, List<CartItem> userCartItems) {
     return Column(
       children: [
         Expanded(
           child: ListView.builder(
             padding: EdgeInsets.all(isSmallScreen ? 10 : 20),
-            itemCount: cart.items.length,
+            itemCount: userCartItems.length,
             itemBuilder: (context, index) {
-              final item = cart.items[index];
-              return _buildCartItemCard(item, screenSize, isSmallScreen, cart, context);
+              final item = userCartItems[index];
+              return _buildCartItemCard(
+                  item, screenSize, isSmallScreen, cart, context);
             },
           ),
         ),
@@ -100,8 +108,8 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCartItemCard(
-      CartItem item, Size screenSize, bool isSmallScreen, CartProvider cart, BuildContext context) {
+  Widget _buildCartItemCard(CartItem item, Size screenSize, bool isSmallScreen,
+      CartProvider cart, BuildContext context) {
     return Card(
       margin: EdgeInsets.only(bottom: isSmallScreen ? 10 : 15),
       elevation: 2,
@@ -160,7 +168,9 @@ class CartPage extends StatelessWidget {
             // Remove button
             IconButton(
               onPressed: () {
-                cart.removeItem(item.id);
+                final userId = FirebaseAuth.instance.currentUser?.uid;
+
+                cart.removeItem(item.id, item.userId);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Service removed from cart')),
                 );
@@ -174,8 +184,10 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCheckoutBar(
-      BuildContext context, Size screenSize, bool isSmallScreen, CartProvider cart) {
+  Widget _buildCheckoutBar(BuildContext context, Size screenSize,
+      bool isSmallScreen, CartProvider cart) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isSmallScreen ? 15 : 25,
@@ -208,7 +220,7 @@ class CartPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '₹${cart.totalAmount.toStringAsFixed(2)}',
+                    '₹${cart.items.where((item) => item.userId == userId).fold(0.0, (sum, item) => sum + item.price).toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: isSmallScreen ? 18 : 22,
                       fontWeight: FontWeight.bold,
@@ -224,22 +236,27 @@ class CartPage extends StatelessWidget {
                   : screenSize.width * 0.3,
               child: ElevatedButton(
                 onPressed: () {
+                  final userId = FirebaseAuth.instance.currentUser?.uid;
                   // Convert CartItem to checkout.CartItem
-                  List<checkout.CartItem> checkoutItems = cart.items.map((item) => 
-                    checkout.CartItem(
-                      id: item.id,
-                      serviceName: item.serviceName,
-                      price: item.price,
-                      imageUrl: item.imageUrl,
-                    )
-                  ).toList();
-                  
+                  List<checkout.CartItem> checkoutItems = cart.items
+                      .where((item) => item.userId == userId)
+                      .map((item) => checkout.CartItem(
+                            id: item.id,
+                            serviceName: item.serviceName,
+                            price: item.price,
+                            imageUrl: item.imageUrl,
+                          ))
+                      .toList();
+
+                  double userTotalAmount =
+                      checkoutItems.fold(0.0, (sum, item) => sum + item.price);
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => checkout.CheckoutPage(
                         cartItems: checkoutItems,
-                        totalAmount: cart.totalAmount,
+                        totalAmount: userTotalAmount,
                       ),
                     ),
                   );

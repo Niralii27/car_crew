@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:car_crew/screens/cartProvider.dart';
@@ -31,6 +32,7 @@ class _ServiceinnerState extends State<Serviceinner> {
     final deviceWidth = MediaQuery.of(context).size.width;
     final deviceHeight = MediaQuery.of(context).size.height;
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final userId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       appBar: AppBar(
@@ -70,45 +72,53 @@ class _ServiceinnerState extends State<Serviceinner> {
           //   onPressed: () {},
           // ),
           // Add cart icon with badge showing number of items
+
           Consumer<CartProvider>(
-            builder: (_, cart, child) => Stack(
-              alignment: Alignment.center,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.shopping_cart, color: Colors.black),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => CartPage()),
-                    );
-                  },
-                ),
-                if (cart.itemCount > 0)
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      constraints: BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Text(
-                        '${cart.itemCount}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
+            builder: (_, cart, child) {
+              // Assuming `cart.items` is a list of cart items and each item has a `userId` property
+              int userItemCount = cart.items
+                  .where((item) => item.userId == userId) // Filter by userId
+                  .length;
+
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.shopping_cart, color: Colors.black),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CartPage()),
+                      );
+                    },
+                  ),
+                  if (userItemCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        textAlign: TextAlign.center,
+                        constraints: BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '$userItemCount',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -359,8 +369,12 @@ class _ServiceinnerState extends State<Serviceinner> {
                 ),
                 ElevatedButton(
                   onPressed: () {
+                    final String userId =
+                        FirebaseAuth.instance.currentUser!.uid; // example
+
                     // Add to cart functionality
                     cartProvider.addItem(
+                      userId: userId,
                       id: widget.productId,
                       name: productData['name'] ?? 'Unknown Service',
                       price: salesPrice,

@@ -5,12 +5,14 @@ class CartItem {
   final String serviceName;
   final double price;
   final String imageUrl;
+  final String userId;
 
   CartItem({
     required this.id,
     required this.serviceName,
     required this.price,
     required this.imageUrl,
+    required this.userId, 
   });
 }
 
@@ -30,16 +32,19 @@ class CartProvider with ChangeNotifier {
   }
 
   void addItem({
+    required String userId,
     required String id,
     required String name,
     required double price,
     required String imageUrl,
   }) {
-    // Check if item already exists in cart
-    final existingItemIndex = _items.indexWhere((item) => item.id == id);
+    // Check if the same item is already in the current user's cart
+    final existingItemIndex = _items.indexWhere(
+      (item) => item.id == id && item.userId == userId
+    );
     
     if (existingItemIndex >= 0) {
-      // Item already exists in cart
+      // Item already exists in this user's cart
       // You could implement quantity increase here if needed
       notifyListeners();
       return;
@@ -52,14 +57,30 @@ class CartProvider with ChangeNotifier {
         serviceName: name,
         price: price,
         imageUrl: imageUrl,
+        userId: userId,
       ),
     );
     
     notifyListeners();
   }
 
-  void removeItem(String id) {
-    _items.removeWhere((item) => item.id == id);
+  List<CartItem> getItemsForUser(String userId) {
+    return _items.where((item) => item.userId == userId).toList();
+  }
+
+  double getTotalAmountForUser(String userId) {
+    return _items
+        .where((item) => item.userId == userId)
+        .fold(0.0, (sum, item) => sum + item.price);
+  }
+
+  void removeItem(String id, String userId) {
+    _items.removeWhere((item) => item.id == id && item.userId == userId);
+    notifyListeners();
+  }
+
+  void clearUserCart(String userId) {
+    _items.removeWhere((item) => item.userId == userId);
     notifyListeners();
   }
 
