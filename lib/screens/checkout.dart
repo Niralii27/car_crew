@@ -1,8 +1,12 @@
 import 'package:car_crew/screens/home.dart';
 import 'package:car_crew/screens/homecontent.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart'; // Import Razorpay package
+import 'package:fluttertoast/fluttertoast.dart'; // For toast messages
+import 'package:firebase_auth/firebase_auth.dart'; // For getting current user
 
 class CheckoutPage extends StatefulWidget {
   final List<CartItem> cartItems;
@@ -19,8 +23,12 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  // Firebase instance
+  // Firebase instances
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Razorpay instance
+  late Razorpay _razorpay;
 
   // Selected date and time slot
   DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
@@ -53,6 +61,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final TextEditingController addressController = TextEditingController();
   final TextEditingController vehicleController = TextEditingController();
 
+  // Booking ID for reference
+  String? _tempBookingId;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize Razorpay
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  @override
+  void dispose() {
+    // Clean up Razorpay instance
+    _razorpay.clear();
+    super.dispose();
+  }
+
   // Handle date selection
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -84,15 +113,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  // Save booking to Firestore
-  Future<String> _saveBookingToFirestore() async {
+  // Create a temporary booking ID in Firestore
+  Future<String> _createTempBooking() async {
     try {
       // Create a new document reference
       final bookingRef = _firestore.collection('Booking').doc();
 
+      // Get current user ID
+      final userId = _auth.currentUser?.uid;
+
+      if (userId == null) {
+        throw Exception("User not logged in");
+      }
+
       // Create a map of booking data
       final bookingData = {
         'bookingId': bookingRef.id,
+        'userId': userId, // Add user ID to the booking
         'customerName': nameController.text,
         'phoneNumber': phoneController.text,
         'address': addressController.text,
@@ -109,8 +146,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   'imageUrl': item.imageUrl,
                 })
             .toList(),
-        'status': 'Pending',
+        'status': 'Payment Pending', // Initial status before payment
         'createdAt': FieldValue.serverTimestamp(),
+        'paymentStatus': 'Pending',
       };
 
       // Set the document with the booking data
@@ -118,14 +156,153 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       return bookingRef.id;
     } catch (e) {
-      print('Error saving booking to Firestore: $e');
+      print('Error creating temporary booking: $e');
       throw e;
     }
   }
 
-  // Book service
+  // Update booking status after successful payment
+  Future<void> _updateBookingStatus(
+      String bookingId, Map<String, dynamic> paymentDetails) async {
+    try {
+      await _firestore.collection('Booking').doc(bookingId).update({
+        'status': 'Confirmed',
+        'paymentStatus': 'Completed',
+        'paymentDetails': paymentDetails,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error updating booking status: $e');
+      throw e;
+    }
+  }
+
+  // Open Razorpay payment
+  void _openRazorpayCheckout(String bookingId) {
+    var options = {
+      'key': 'rzp_test_yCgrsfXSuM7SxL', // Replace with your actual Razorpay Key
+      'amount': (widget.totalAmount * 100).toInt(), // Amount in paise
+      'name': 'Car Crew Services',
+      'description': 'Car Service Booking',
+      'order_id': '', // Optional, but recommended for reconciliation
+      'prefill': {
+        'contact': phoneController.text,
+        'name': nameController.text,
+      },
+      'notes': {
+        'booking_id': bookingId,
+        'address': addressController.text,
+      },
+      'theme': {
+        'color': '#0052CC',
+      }
+    };
+
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      print('Error opening Razorpay: $e');
+      Fluttertoast.showToast(
+        msg: "Error opening payment gateway. Please try again.",
+        backgroundColor: Colors.red,
+      );
+    }
+  }
+
+  // Handle successful payment
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    if (_tempBookingId != null) {
+      try {
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+
+        // Create payment details map
+        final paymentDetails = {
+          'paymentId': response.paymentId,
+          'orderId': response.orderId,
+          'signature': response.signature,
+          'amount': widget.totalAmount,
+          'timestamp': FieldValue.serverTimestamp(),
+        };
+
+        // Update booking with payment details
+        await _updateBookingStatus(_tempBookingId!, paymentDetails);
+
+        // Close loading dialog
+        Navigator.pop(context);
+
+        // Show success dialog
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return _buildSuccessDialog(context, _tempBookingId!);
+          },
+        );
+      } catch (e) {
+        // Close loading dialog
+        Navigator.pop(context);
+
+        // Show error
+        Fluttertoast.showToast(
+          msg:
+              "Payment successful but booking update failed. Please contact support.",
+          backgroundColor: Colors.red,
+        );
+      }
+    }
+  }
+
+  // Handle payment error
+  void _handlePaymentError(PaymentFailureResponse response) {
+    String errorMessage =
+        "Payment Failed: ${response.message ?? 'Unknown error'}";
+
+    Fluttertoast.showToast(
+      msg: errorMessage,
+      backgroundColor: Colors.red,
+    );
+
+    // If booking was created, you might want to update its status to 'Payment Failed'
+    if (_tempBookingId != null) {
+      _firestore.collection('Booking').doc(_tempBookingId).update({
+        'status': 'Payment Failed',
+        'paymentStatus': 'Failed',
+        'paymentError': {
+          'code': response.code.toString(),
+          'message': response.message,
+          'timestamp': FieldValue.serverTimestamp(),
+        }
+      }).catchError((e) => print('Error updating failed payment status: $e'));
+    }
+  }
+
+  // Handle external wallet
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    Fluttertoast.showToast(
+      msg: "External Wallet Selected: ${response.walletName}",
+      backgroundColor: Colors.blue,
+    );
+  }
+
+  // Initiate booking process
   void _bookService() async {
     if (_formKey.currentState!.validate()) {
+      // Check if user is logged in
+      if (_auth.currentUser == null) {
+        Fluttertoast.showToast(
+          msg: "Please log in to book a service",
+          backgroundColor: Colors.red,
+        );
+        // You might want to navigate to login page here
+        return;
+      }
+
       // Show loading indicator
       showDialog(
         context: context,
@@ -136,19 +313,31 @@ class _CheckoutPageState extends State<CheckoutPage> {
       );
 
       try {
-        // Save booking to Firestore
-        final bookingId = await _saveBookingToFirestore();
+        // Create a temporary booking entry
+        _tempBookingId = await _createTempBooking();
 
         // Close loading dialog
         Navigator.pop(context);
 
-        // Show success dialog
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return _buildSuccessDialog(context, bookingId);
-          },
-        );
+        // If payment method is "Pay at Service", skip payment gateway
+        if (selectedPaymentMethod == 'Pay at Service') {
+          // Update booking status directly
+          await _firestore.collection('Booking').doc(_tempBookingId).update({
+            'status': 'Confirmed',
+            'paymentStatus': 'Pay at Service',
+          });
+
+          // Show success dialog
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return _buildSuccessDialog(context, _tempBookingId!);
+            },
+          );
+        } else {
+          // Proceed with online payment
+          _openRazorpayCheckout(_tempBookingId!);
+        }
       } catch (e) {
         // Close loading dialog
         Navigator.pop(context);
@@ -231,11 +420,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                 ),
                 onPressed: () {
+                  final userId =
+                      FirebaseAuth.instance.currentUser?.uid; // pass the userid
+                  Get.to(() => Homepage(), arguments: {'userId': userId});
                   // Navigate back to home/dashboard
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Homepage()),
-                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => Homepage()),
+                  // );
                 },
                 child: const Text(
                   'Back to Home',
@@ -613,6 +805,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget _buildProceedButton(bool isSmallScreen) {
     final Size screenSize = MediaQuery.of(context).size;
 
+    String buttonText = selectedPaymentMethod == 'Pay at Service'
+        ? 'Confirm Booking'
+        : 'Proceed to Pay ₹${widget.totalAmount.toStringAsFixed(2)}';
+
     return Center(
       child: SizedBox(
         width: isSmallScreen ? double.infinity : screenSize.width * 0.6,
@@ -630,10 +826,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock, size: 20),
+              Icon(
+                  selectedPaymentMethod == 'Pay at Service'
+                      ? Icons.check
+                      : Icons.lock,
+                  size: 20),
               const SizedBox(width: 10),
               Text(
-                'Proceed to Pay ₹${widget.totalAmount.toStringAsFixed(2)}',
+                buttonText,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

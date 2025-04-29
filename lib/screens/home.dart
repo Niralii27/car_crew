@@ -8,9 +8,13 @@ import 'package:car_crew/screens/services.dart';
 import 'package:car_crew/screens/sosServices.dart';
 import 'package:car_crew/screens/cart.dart';
 import 'package:car_crew/screens/userProfile.dart';
+import 'package:get/get.dart';
 
 class Homepage extends StatefulWidget {
-  const Homepage({super.key});
+      final userId = Get.arguments['userId'];
+
+  
+  // const Homepage({super.key});
 
   @override
   State<Homepage> createState() => _nameState();
