@@ -1,5 +1,8 @@
+import 'package:car_crew/screens/home.dart';
+import 'package:car_crew/screens/homecontent.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CheckoutPage extends StatefulWidget {
   final List<CartItem> cartItems;
@@ -16,10 +19,13 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  // Firebase instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   // Selected date and time slot
   DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
   String selectedTimeSlot = '10:00 AM - 12:00 PM';
-  
+
   // Available time slots
   final List<String> timeSlots = [
     '08:00 AM - 10:00 AM',
@@ -40,7 +46,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   // Form key
   final _formKey = GlobalKey<FormState>();
-  
+
   // User details
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -78,8 +84,47 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
+  // Save booking to Firestore
+  Future<String> _saveBookingToFirestore() async {
+    try {
+      // Create a new document reference
+      final bookingRef = _firestore.collection('Booking').doc();
+
+      // Create a map of booking data
+      final bookingData = {
+        'bookingId': bookingRef.id,
+        'customerName': nameController.text,
+        'phoneNumber': phoneController.text,
+        'address': addressController.text,
+        'vehicleModel': vehicleController.text,
+        'bookingDate': selectedDate,
+        'timeSlot': selectedTimeSlot,
+        'paymentMethod': selectedPaymentMethod,
+        'totalAmount': widget.totalAmount,
+        'services': widget.cartItems
+            .map((item) => {
+                  'serviceId': item.id,
+                  'serviceName': item.serviceName,
+                  'price': item.price,
+                  'imageUrl': item.imageUrl,
+                })
+            .toList(),
+        'status': 'Pending',
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      // Set the document with the booking data
+      await bookingRef.set(bookingData);
+
+      return bookingRef.id;
+    } catch (e) {
+      print('Error saving booking to Firestore: $e');
+      throw e;
+    }
+  }
+
   // Book service
-  void _bookService() {
+  void _bookService() async {
     if (_formKey.currentState!.validate()) {
       // Show loading indicator
       showDialog(
@@ -90,22 +135,45 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ),
       );
 
-      // Simulate processing
-      Future.delayed(const Duration(seconds: 2), () {
-        Navigator.pop(context); // Close loading dialog
-        
+      try {
+        // Save booking to Firestore
+        final bookingId = await _saveBookingToFirestore();
+
+        // Close loading dialog
+        Navigator.pop(context);
+
         // Show success dialog
         showDialog(
           context: context,
           builder: (BuildContext context) {
-            return _buildSuccessDialog(context);
+            return _buildSuccessDialog(context, bookingId);
           },
         );
-      });
+      } catch (e) {
+        // Close loading dialog
+        Navigator.pop(context);
+
+        // Show error dialog
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error'),
+              content: Text('Failed to book service: ${e.toString()}'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
     }
   }
 
-  Widget _buildSuccessDialog(BuildContext context) {
+  Widget _buildSuccessDialog(BuildContext context, String bookingId) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
       child: Container(
@@ -137,6 +205,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
             const SizedBox(height: 10),
             Text(
+              'Booking ID: $bookingId',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 10),
+            Text(
               'Total Amount: ₹${widget.totalAmount.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 18,
@@ -158,7 +232,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 onPressed: () {
                   // Navigate back to home/dashboard
-                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Homepage()),
+                  );
                 },
                 child: const Text(
                   'Back to Home',
@@ -201,19 +278,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 // Service summary section
                 _buildSectionTitle('Service Summary', Icons.car_repair),
                 _buildServiceSummary(isSmallScreen),
-                
+
                 // Date and time selection
                 _buildSectionTitle('Select Date & Time', Icons.calendar_today),
                 _buildDateTimeSelection(isSmallScreen),
-                
+
                 // User details
                 _buildSectionTitle('Your Details', Icons.person),
                 _buildUserDetailsForm(isSmallScreen),
-                
+
                 // Payment method
                 _buildSectionTitle('Payment Method', Icons.payment),
                 _buildPaymentMethodSelection(isSmallScreen),
-                
+
                 // Proceed to pay button
                 const SizedBox(height: 30),
                 _buildProceedButton(isSmallScreen),
@@ -256,29 +333,31 @@ class _CheckoutPageState extends State<CheckoutPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Services list
-            ...widget.cartItems.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    item.serviceName,
-                    style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
-                  ),
-                  Text(
-                    '₹${item.price.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 14 : 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            )).toList(),
-            
+            ...widget.cartItems
+                .map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            item.serviceName,
+                            style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
+                          ),
+                          Text(
+                            '₹${item.price.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 14 : 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ))
+                .toList(),
+
             // Divider
             const Divider(height: 20, thickness: 1),
-            
+
             // Total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -319,7 +398,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
             InkWell(
               onTap: () => _selectDate(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey[300]!),
                   borderRadius: BorderRadius.circular(8),
@@ -336,16 +416,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Time slot selection
             const Text(
               'Select Time Slot:',
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 10),
-            
+
             // Time slot chips
             Wrap(
               spacing: 8,
@@ -357,7 +437,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   selected: isSelected,
                   labelStyle: TextStyle(
                     color: isSelected ? Colors.white : Colors.black,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                   backgroundColor: Colors.grey[200],
                   selectedColor: Colors.blue[700],
@@ -402,9 +483,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Phone field
             TextFormField(
               controller: phoneController,
@@ -425,9 +506,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Address field
             TextFormField(
               controller: addressController,
@@ -446,9 +527,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Vehicle details
             TextFormField(
               controller: vehicleController,
@@ -483,19 +564,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Payment methods
-            ...paymentMethods.map((method) => RadioListTile<String>(
-              title: Text(method),
-              value: method,
-              groupValue: selectedPaymentMethod,
-              activeColor: Colors.blue[800],
-              onChanged: (value) {
-                setState(() {
-                  selectedPaymentMethod = value!;
-                });
-              },
-              dense: isSmallScreen,
-            )).toList(),
-            
+            ...paymentMethods
+                .map((method) => RadioListTile<String>(
+                      title: Text(method),
+                      value: method,
+                      groupValue: selectedPaymentMethod,
+                      activeColor: Colors.blue[800],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedPaymentMethod = value!;
+                        });
+                      },
+                      dense: isSmallScreen,
+                    ))
+                .toList(),
+
             // Payment icons
             Padding(
               padding: const EdgeInsets.only(top: 8, left: 8),
@@ -528,12 +611,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildProceedButton(bool isSmallScreen) {
-  final Size screenSize = MediaQuery.of(context).size;
-    
+    final Size screenSize = MediaQuery.of(context).size;
+
     return Center(
       child: SizedBox(
         width: isSmallScreen ? double.infinity : screenSize.width * 0.6,
-      height: isSmallScreen ? 50 : 55,
+        height: isSmallScreen ? 50 : 55,
         child: ElevatedButton(
           onPressed: _bookService,
           style: ElevatedButton.styleFrom(
@@ -565,7 +648,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
 }
 
 // Create a helper function to navigate from the CartPage to CheckoutPage
-void navigateToCheckout(BuildContext context, List<CartItem> cartItems, double totalAmount) {
+void navigateToCheckout(
+    BuildContext context, List<CartItem> cartItems, double totalAmount) {
   Navigator.push(
     context,
     MaterialPageRoute(
