@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:car_crew/screens/admin_sidebar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 // import 'package/car_crew/settings_screen.dart';
 // import 'sos_services_screen.dart';
 
@@ -12,6 +14,10 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
+  String? userId;
+  String userName = "Admin";
+  String userImage = "Admin";
+
   late PageController _pageController;
   int currentIndex = 0;
 
@@ -35,6 +41,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   void initState() {
     super.initState();
+
+    // Get the arguments passed from the login page
+    final args = Get.arguments;
+    if (args != null && args is Map<String, dynamic>) {
+      userId = args['userId'];
+      print("User ID received: $userId");
+
+      // Fetch user data once we have the ID
+      if (userId != null) {
+        fetchUserName();
+      }
+    }
+
     _pageController = PageController(initialPage: 0);
 
     Timer.periodic(Duration(seconds: 3), (Timer timer) {
@@ -53,6 +72,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
         }
       }
     });
+  }
+
+  Future<void> fetchUserName() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('UsersTbl')
+          .doc(userId)
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        Map<String, dynamic> userData = doc.data() as Map<String, dynamic>;
+        setState(() {
+          // Replace 'UserName' with whatever field you use in your Firestore
+          userName = userData['UserName'] ?? "Admin";
+          userImage = userData['UserImage'] ?? ""; // Yeh line add karni hai
+        });
+      }
+    } catch (e) {
+      print("Error fetching user name: $e");
+    }
   }
 
   @override
@@ -82,13 +121,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           );
                         },
                         child: CircleAvatar(
-                          radius: deviceWidth * 0.07,
-                          backgroundImage: AssetImage('assets/profile.png'),
+                          radius: deviceWidth * 0.06,
+                          backgroundImage: userImage.isNotEmpty
+                              ? NetworkImage(userImage)
+                              : AssetImage('assets/profile.png')
+                                  as ImageProvider,
                         ),
                       ),
                       SizedBox(width: deviceWidth * 0.03),
                       Text(
-                        'Welcome, Admin',
+                        userName,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -97,7 +139,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     ],
                   ),
                   CircleAvatar(
-                    radius: 25,
+                    radius: 24,
                     backgroundImage: AssetImage('assets/car_profile.png'),
                   ),
                 ],
