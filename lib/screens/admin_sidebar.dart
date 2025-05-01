@@ -1,4 +1,7 @@
+import 'package:car_crew/screens/admin_profile.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class AdminSidenavBar extends StatefulWidget {
   const AdminSidenavBar({Key? key}) : super(key: key);
@@ -8,14 +11,56 @@ class AdminSidenavBar extends StatefulWidget {
 }
 
 class _SideNavbarState extends State<AdminSidenavBar> {
+  String? userId;
+  String userName = "Admin";
+  String userImage = "Admin";
+  String userEmail = "Admin";
+
   final List<DrawerItem> menuItems = [
-    DrawerItem(title: 'My Car', icon: Icons.car_rental),
+    DrawerItem(title: 'My Profile', icon: Icons.person),
     DrawerItem(title: 'Notifications', icon: Icons.notifications),
     DrawerItem(title: 'Offers & notifications', icon: Icons.local_offer),
     DrawerItem(title: 'Settings', icon: Icons.settings),
     DrawerItem(title: 'About', icon: Icons.info_outline),
     DrawerItem(title: 'Help & feedback', icon: Icons.help_outline),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Get the arguments passed from the login page
+    final args = Get.arguments;
+    if (args != null && args is Map<String, dynamic>) {
+      userId = args['userId'];
+      print("User ID received: $userId");
+
+      // Fetch user data once we have the ID
+      if (userId != null) {
+        fetchUserName();
+      }
+    }
+  }
+
+  Future<void> fetchUserName() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('UsersTbl')
+          .doc(userId)
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        Map<String, dynamic> userData = doc.data() as Map<String, dynamic>;
+        setState(() {
+          userName = userData['UserName'] ?? "Admin";
+          userImage = userData['UserImage'] ?? "";
+          userEmail = userData['UserEmail'] ?? "";
+        });
+      }
+    } catch (e) {
+      print("Error fetching user name: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,14 +115,16 @@ class _SideNavbarState extends State<AdminSidenavBar> {
             radius:
                 MediaQuery.of(context).size.width * 0.1, // 10% of screen width
             backgroundColor: Colors.blue,
-            backgroundImage: AssetImage('assets/profile.png'),
+            backgroundImage: userImage.isNotEmpty
+                ? NetworkImage(userImage)
+                : AssetImage('assets/profile.png') as ImageProvider,
           ),
 
           const SizedBox(height: 15),
 
           // User name
-          const Text(
-            'Admin',
+          Text(
+            userName,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
@@ -85,8 +132,8 @@ class _SideNavbarState extends State<AdminSidenavBar> {
           ),
 
           // User email
-          const Text(
-            'akbarinirali27@gmail.com',
+          Text(
+            userEmail,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey,
@@ -108,6 +155,13 @@ class _SideNavbarState extends State<AdminSidenavBar> {
         // Close drawer when item is tapped
         Navigator.pop(context);
 
+        // Handle navigation
+        if (item.title == 'My Profile') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AdminProfile()),
+          );
+        }
         // Add your navigation logic here using setState if needed
         // Example:
         // setState(() {
