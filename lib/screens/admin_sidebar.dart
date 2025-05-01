@@ -1,4 +1,5 @@
 import 'package:car_crew/screens/admin_profile.dart';
+import 'package:car_crew/screens/admin_show_car.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -18,7 +19,7 @@ class _SideNavbarState extends State<AdminSidenavBar> {
 
   final List<DrawerItem> menuItems = [
     DrawerItem(title: 'My Profile', icon: Icons.person),
-    DrawerItem(title: 'Notifications', icon: Icons.notifications),
+    DrawerItem(title: 'Cars', icon: Icons.car_repair_sharp),
     DrawerItem(title: 'Offers & notifications', icon: Icons.local_offer),
     DrawerItem(title: 'Settings', icon: Icons.settings),
     DrawerItem(title: 'About', icon: Icons.info_outline),
@@ -160,6 +161,13 @@ class _SideNavbarState extends State<AdminSidenavBar> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AdminProfile()),
+          );
+        }
+
+        if (item.title == 'Cars') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AdminShowVehicle()),
           );
         }
         // Add your navigation logic here using setState if needed
