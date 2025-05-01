@@ -195,7 +195,8 @@ class _loginpageState extends State<loginpage> {
                               //Get.to(() => Homepage());
                               if (email == "admin7@gmail.com" &&
                                   password == "Admin@2727") {
-                                Get.to(() => AdminHomepage());
+                                Get.to(() => AdminHomepage(),
+                                    arguments: {'userId': userId});
                               } else {
                                 Get.to(() => Homepage(),
                                     arguments: {'userId': userId});
