@@ -1,5 +1,9 @@
+import 'package:car_crew/screens/cart.dart';
+import 'package:car_crew/screens/cartProvider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class sosServiceinner extends StatefulWidget {
   final String productId;
@@ -27,6 +31,8 @@ class _sosServiceinnerState extends State<sosServiceinner> {
   Widget build(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
     final deviceHeight = MediaQuery.of(context).size.height;
+     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final userId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
       appBar: AppBar(
@@ -61,9 +67,59 @@ class _sosServiceinnerState extends State<sosServiceinner> {
           },
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.share, color: Colors.black),
-            onPressed: () {},
+          // IconButton(
+          //   icon: Icon(Icons.share, color: Colors.black),
+          //   onPressed: () {},
+          // ),
+
+           // Add cart icon with badge showing number of items
+
+          Consumer<CartProvider>(
+            builder: (_, cart, child) {
+              // Assuming `cart.items` is a list of cart items and each item has a `userId` property
+              int userItemCount = cart.items
+                  .where((item) => item.userId == userId) // Filter by userId
+                  .length;
+
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.shopping_cart, color: Colors.black),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CartPage()),
+                      );
+                    },
+                  ),
+                  if (userItemCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '$userItemCount',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -282,6 +338,19 @@ class _sosServiceinnerState extends State<sosServiceinner> {
 
           final productData = snapshot.data!.data() as Map<String, dynamic>;
 
+          // Convert salesPrice to double safely
+          double salesPrice = 0.0;
+          if (productData['salesPrice'] != null) {
+            if (productData['salesPrice'] is int) {
+              salesPrice = (productData['salesPrice'] as int).toDouble();
+            } else if (productData['salesPrice'] is double) {
+              salesPrice = productData['salesPrice'] as double;
+            } else if (productData['salesPrice'] is String) {
+              salesPrice =
+                  double.tryParse(productData['salesPrice'] as String) ?? 0.0;
+            }
+          }
+
           return Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -292,7 +361,7 @@ class _sosServiceinnerState extends State<sosServiceinner> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "₹${productData['salesPrice']?.toString() ?? '0.0'}",
+                  "₹${salesPrice.toStringAsFixed(2)}",
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -302,6 +371,36 @@ class _sosServiceinnerState extends State<sosServiceinner> {
                 ElevatedButton(
                   onPressed: () {
                     // Add to cart functionality
+                    final String userId =
+                        FirebaseAuth.instance.currentUser!.uid; // example
+
+                    // Add to cart functionality
+                    cartProvider.addItem(
+                      userId: userId,
+                      id: widget.productId,
+                      name: productData['name'] ?? 'Unknown Service',
+                      price: salesPrice,
+                      imageUrl: productData['imageUrl'] ?? '',
+                    );
+
+                    // Show confirmation message
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Added to cart!'),
+                        duration: Duration(seconds: 2),
+                        action: SnackBarAction(
+                          label: 'VIEW CART',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => CartPage()),
+                            );
+                          },
+                        ),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
