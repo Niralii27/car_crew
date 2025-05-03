@@ -1,3 +1,5 @@
+import 'package:car_crew/screens/home.dart';
+import 'package:car_crew/screens/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -74,7 +76,10 @@ class CartPage extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () {
               // Navigate to services page
-              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ServicesPage()),
+              );
             },
             icon: const Icon(Icons.add),
             label: const Text('Browse Services'),

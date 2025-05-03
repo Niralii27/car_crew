@@ -32,7 +32,7 @@ class _AdminServicesState extends State<AdminServices> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Periodic Services", style: TextStyle(color: Colors.black)),
+        title: Text("All Services", style: TextStyle(color: Colors.black)),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {

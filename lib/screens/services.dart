@@ -1,6 +1,9 @@
+import 'package:car_crew/screens/home.dart';
 import 'package:car_crew/screens/servicesDetails.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
 
 // Model class for service categories
 class ServiceCategory {
@@ -62,6 +65,14 @@ class _ServicesState extends State<ServicesPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            final userId =
+                FirebaseAuth.instance.currentUser?.uid; // pass the userid
+            Get.to(() => Homepage(), arguments: {'userId': userId});
+          },
+        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _serviceCategories.snapshots(),
