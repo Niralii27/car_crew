@@ -19,6 +19,10 @@ class _HomeContentState extends State<HomeContent> {
   String userImage = "User";
   String? imageUrl;
 
+  // List to store reviews
+  List<Map<String, dynamic>> reviews = [];
+  bool isLoadingReviews = true;
+
   late PageController _pageController;
   int currentIndex = 0;
 
@@ -57,6 +61,9 @@ class _HomeContentState extends State<HomeContent> {
 
     //car profile image
     fetchProfileImage();
+
+    // Fetch reviews
+    fetchReviews();
 
     _pageController = PageController(initialPage: 0);
 
@@ -100,6 +107,55 @@ class _HomeContentState extends State<HomeContent> {
     }
   }
 
+// Fetch reviews from Firestore
+  Future<void> fetchReviews() async {
+    setState(() {
+      isLoadingReviews = true;
+    });
+
+    try {
+      // Get the top 5 reviews ordered by date (most recent first)
+      final QuerySnapshot reviewSnapshot = await FirebaseFirestore.instance
+          .collection('Reviews')
+          .orderBy('createdAt', descending: true)
+          .limit(10)
+          .get();
+
+      List<Map<String, dynamic>> fetchedReviews = [];
+
+      for (var doc in reviewSnapshot.docs) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+        // Format timestamp to readable date
+        String formattedDate = "Recent";
+        if (data['createdAt'] != null) {
+          Timestamp timestamp = data['createdAt'] as Timestamp;
+          DateTime dateTime = timestamp.toDate();
+          formattedDate = "${dateTime.day}/${dateTime.month}/${dateTime.year}";
+        }
+
+        fetchedReviews.add({
+          'id': doc.id,
+          'customerName': data['customerName'] ?? 'Anonymous',
+          'rating': data['rating'] ?? 0,
+          'review': data['review'] ?? 'No review text',
+          'serviceName': data['serviceName'] ?? 'Unknown Service',
+          'date': formattedDate,
+        });
+      }
+
+      setState(() {
+        reviews = fetchedReviews;
+        isLoadingReviews = false;
+      });
+    } catch (e) {
+      print("Error fetching reviews: $e");
+      setState(() {
+        isLoadingReviews = false;
+      });
+    }
+  }
+
 //fetch the car profile image
 
   Future<void> fetchProfileImage() async {
@@ -117,6 +173,101 @@ class _HomeContentState extends State<HomeContent> {
         });
       }
     }
+  }
+
+  // Widget to display star rating
+  Widget buildRatingStars(num rating) {
+    return Row(
+      children: List.generate(5, (index) {
+        return Icon(
+          index < rating ? Icons.star : Icons.star_border,
+          color: Colors.amber,
+          size: 14,
+        );
+      }),
+    );
+  }
+
+  // Widget to build review card for horizontal scroll
+  Widget buildReviewCard(Map<String, dynamic> review) {
+    return Container(
+      width: 280,
+      margin: EdgeInsets.symmetric(horizontal: 8),
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.blue.shade100,
+                    child: Text(
+                      review['customerName'][0].toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.blue.shade800,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          review['customerName'],
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          review['date'],
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  buildRatingStars(review['rating']),
+                  Text(
+                    review['serviceName'],
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Expanded(
+                child: Text(
+                  review['review'],
+                  style: TextStyle(fontSize: 13),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -248,16 +399,14 @@ class _HomeContentState extends State<HomeContent> {
                             ),
                           ),
                           Container(
-                            height:
-                                deviceHeight * 0.35, // Adjust height as needed
+                            height: deviceHeight * 0.35,
                             child: GridView.builder(
-                              physics:
-                                  NeverScrollableScrollPhysics(), // Prevent scrolling
+                              physics: NeverScrollableScrollPhysics(),
                               padding: EdgeInsets.all(16),
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4, // 4 items per row
-                                childAspectRatio: 0.7, // Adjusted to fit name
+                                crossAxisCount: 4,
+                                childAspectRatio: 0.7,
                                 crossAxisSpacing: 8,
                                 mainAxisSpacing: 8,
                               ),
@@ -299,6 +448,66 @@ class _HomeContentState extends State<HomeContent> {
                     SizedBox(
                       height: deviceHeight * 0.01,
                     ),
+
+                    // Reviews Section - Horizontal Scrolling
+                    Padding(
+                      padding: EdgeInsets.only(
+                          left: deviceWidth * 0.04,
+                          right: deviceWidth * 0.04,
+                          top: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Customer Reviews',
+                            style: TextStyle(
+                              fontSize: deviceWidth * 0.05,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              // Navigate to all reviews page
+                              print("Show all reviews");
+                            },
+                            child: Text(
+                              'See All',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontSize: deviceWidth * 0.035,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 5),
+
+                    // Horizontal scrolling reviews
+                    Container(
+                      height: 160,
+                      child: isLoadingReviews
+                          ? Center(child: CircularProgressIndicator())
+                          : reviews.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    "No reviews yet",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: EdgeInsets.symmetric(horizontal: 8),
+                                  itemCount: reviews.length,
+                                  itemBuilder: (context, index) {
+                                    return buildReviewCard(reviews[index]);
+                                  },
+                                ),
+                    ),
+
                     // Container(
                     //   child: Column(
                     //     children: [
