@@ -1,8 +1,11 @@
+import 'package:car_crew/controller/user_auth.dart';
 import 'package:car_crew/screens/admin_profile.dart';
 import 'package:car_crew/screens/admin_show_car.dart';
+import 'package:car_crew/screens/loginpage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:car_crew/controller/snackbar_controller.dart';
 
 class AdminSidenavBar extends StatefulWidget {
   const AdminSidenavBar({Key? key}) : super(key: key);
@@ -20,10 +23,10 @@ class _SideNavbarState extends State<AdminSidenavBar> {
   final List<DrawerItem> menuItems = [
     DrawerItem(title: 'My Profile', icon: Icons.person),
     DrawerItem(title: 'Cars', icon: Icons.car_repair_sharp),
-    DrawerItem(title: 'Offers & notifications', icon: Icons.local_offer),
+    DrawerItem(title: 'Help & feedback', icon: Icons.help_outline),
     DrawerItem(title: 'Settings', icon: Icons.settings),
     DrawerItem(title: 'About', icon: Icons.info_outline),
-    DrawerItem(title: 'Help & feedback', icon: Icons.help_outline),
+    DrawerItem(title: 'Logout', icon: Icons.logout),
   ];
 
   @override
@@ -170,16 +173,34 @@ class _SideNavbarState extends State<AdminSidenavBar> {
             MaterialPageRoute(builder: (context) => AdminShowVehicle()),
           );
         }
-        // Add your navigation logic here using setState if needed
-        // Example:
-        // setState(() {
-        //   _selectedIndex = menuItems.indexOf(item);
-        // });
-        //
-        // if (item.title == 'Settings') {
-        //   Navigator.push(context,
-        //     MaterialPageRoute(builder: (context) => SettingsScreen()));
-        // }
+
+        final Snackbar _snackbar = Snackbar();
+
+        if (item.title == 'Logout') {
+          () async {
+            try {
+              await UserController.logout();
+
+              if (!context.mounted) return;
+
+              _snackbar.showCustomSnackBar(
+                context: context,
+                message: "Logged out successfully",
+                isSuccess: true,
+              );
+
+              Get.offAll(() => const loginpage()); // Navigate and clear stack
+            } catch (e) {
+              if (!context.mounted) return;
+
+              _snackbar.showCustomSnackBar(
+                context: context,
+                message: "Failed to logout: ${e.toString()}",
+                isSuccess: false,
+              );
+            }
+          }(); 
+        }
       },
     );
   }

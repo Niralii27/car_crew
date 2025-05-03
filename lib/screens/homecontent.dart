@@ -1,5 +1,6 @@
 import 'package:car_crew/screens/sideNavbar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -16,6 +17,7 @@ class _HomeContentState extends State<HomeContent> {
   String? userId;
   String userName = "User";
   String userImage = "User";
+  String? imageUrl;
 
   late PageController _pageController;
   int currentIndex = 0;
@@ -52,6 +54,9 @@ class _HomeContentState extends State<HomeContent> {
         fetchUserName();
       }
     }
+
+    //car profile image
+    fetchProfileImage();
 
     _pageController = PageController(initialPage: 0);
 
@@ -92,6 +97,25 @@ class _HomeContentState extends State<HomeContent> {
       }
     } catch (e) {
       print("Error fetching user name: $e");
+    }
+  }
+
+//fetch the car profile image
+
+  Future<void> fetchProfileImage() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('carProfile')
+          .where('userId', isEqualTo: currentUser.uid)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        setState(() {
+          imageUrl = snapshot.docs.first['imageUrl'];
+        });
+      }
     }
   }
 
@@ -154,9 +178,11 @@ class _HomeContentState extends State<HomeContent> {
                           // Notification Icon
                           CircleAvatar(
                             radius: deviceWidth * 0.06,
-                            backgroundImage:
-                                AssetImage('assets/car_profile.png'),
-                          )
+                            backgroundImage: imageUrl != null
+                                ? NetworkImage(imageUrl!)
+                                : AssetImage('assets/car_profile.png')
+                                    as ImageProvider,
+                          ),
                         ],
                       ),
                     ),

@@ -1,4 +1,5 @@
 import 'package:car_crew/screens/admin_add_car_product.dart';
+import 'package:car_crew/screens/admin_edit_car_product.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -29,7 +30,7 @@ class _AdminCarProductPageState extends State<AdminCarProductPage> {
       // Query Firestore collection for Toyota cars
       final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('carProducts')
-          .where('categoryId', isEqualTo: 'IkEn0GBVZeXDtZsnk9WL')
+          .where('categoryId')
           .get();
 
       final List<Map<String, dynamic>> loadedProducts = [];
@@ -78,6 +79,21 @@ class _AdminCarProductPageState extends State<AdminCarProductPage> {
     }
   }
 
+  void navigateToEditPage(Map<String, dynamic> car) async {
+    // Navigate to the edit page and await for a result
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditCarProductPage(car: car),
+      ),
+    );
+
+    // If the result is true (indicating successful edit), refresh the list
+    if (result == true) {
+      fetchCarProducts();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Get screen size for responsive design
@@ -86,7 +102,7 @@ class _AdminCarProductPageState extends State<AdminCarProductPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Admin: Toyota Cars',
+          'Cars Products',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         elevation: 0,
@@ -129,15 +145,7 @@ class _AdminCarProductPageState extends State<AdminCarProductPage> {
                                   return AdminCarListItem(
                                     car: car,
                                     onDelete: () => deleteCarProduct(car['id']),
-                                    onEdit: () {
-                                      // Navigate to edit page
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                'Edit feature to be implemented')),
-                                      );
-                                    },
+                                    onEdit: () => navigateToEditPage(car),
                                   );
                                 },
                               );
@@ -158,15 +166,7 @@ class _AdminCarProductPageState extends State<AdminCarProductPage> {
                                   return AdminCarGridItem(
                                     car: car,
                                     onDelete: () => deleteCarProduct(car['id']),
-                                    onEdit: () {
-                                      // Navigate to edit page
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                'Edit feature to be implemented')),
-                                      );
-                                    },
+                                    onEdit: () => navigateToEditPage(car),
                                   );
                                 },
                               );

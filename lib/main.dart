@@ -1,5 +1,6 @@
 import 'package:car_crew/controller/user_auth.dart';
 import 'package:car_crew/screens/cartProvider.dart';
+import 'package:car_crew/screens/help.dart';
 import 'package:car_crew/screens/sideNavbar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:car_crew/firebase_options.dart';
@@ -48,7 +49,7 @@ class myApp extends StatelessWidget {
       routes: {
         '/account': (context) => const AccountPage(),
         '/carDetails': (context) => const CarDetailPage(),
-        '/selectVehicle': (context) => const Selectvehicle(),
+        '/selectVehicle': (context) => const HelpPage(),
         '/history': (context) => const HistroyPage(),
         '/sideNavbar': (context) => const Sidenavbar(),
       },
