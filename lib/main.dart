@@ -14,23 +14,23 @@ import 'package:car_crew/screens/history.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
-
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-    Get.put(UserController());
 
-  runApp(  MultiProvider(
+  Get.put(UserController());
+
+  runApp(
+    MultiProvider(
       providers: [
-       ChangeNotifierProvider(
+        ChangeNotifierProvider(
           create: (ctx) => CartProvider(),
         ),
       ],
       child: const myApp(),
-  ),
+    ),
   );
 }
 
@@ -46,6 +46,7 @@ class myApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: loginpage(),
+      
       routes: {
         '/account': (context) => const AccountPage(),
         '/carDetails': (context) => const CarDetailPage(),

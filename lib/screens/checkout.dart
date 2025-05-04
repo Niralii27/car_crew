@@ -1,9 +1,11 @@
+import 'package:car_crew/screens/cartProvider.dart';
 import 'package:car_crew/screens/home.dart';
 import 'package:car_crew/screens/homecontent.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart'; // Import Razorpay package
 import 'package:fluttertoast/fluttertoast.dart'; // For toast messages
 import 'package:firebase_auth/firebase_auth.dart'; // For getting current user
@@ -209,6 +211,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
+  // Clear the cart after successful booking
+  void _clearCart() {
+    final userId = _auth.currentUser?.uid;
+    if (userId != null) {
+      // Get the CartProvider and clear the cart for this user
+      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+      cartProvider.clearUserCart(userId);
+
+      // Show a toast to confirm cart cleared
+      Fluttertoast.showToast(
+        msg: "Your cart has been cleared",
+        backgroundColor: Colors.green,
+      );
+    }
+  }
+
   // Handle successful payment
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     if (_tempBookingId != null) {
@@ -236,6 +254,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
         // Close loading dialog
         Navigator.pop(context);
+
+        // Clear the cart
+        _clearCart();
 
         // Show success dialog
         showDialog(
@@ -326,6 +347,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
             'status': 'Confirmed',
             'paymentStatus': 'Pay at Service',
           });
+
+          _clearCart();
 
           // Show success dialog
           showDialog(
