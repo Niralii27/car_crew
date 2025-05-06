@@ -24,7 +24,7 @@ void main() async {
 //set the status bar color
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
-      statusBarColor: Colors.blue[800]!, 
+      statusBarColor: Colors.blue[800]!,
       statusBarIconBrightness: Brightness.light,
     ),
   );
