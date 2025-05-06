@@ -33,11 +33,11 @@ class _ServicesDetailsState extends State<Servicesdetails> {
         title: Text(
           "Services details",
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            //fontWeight: FontWeight.bold,
             fontSize: deviceWidth * 0.06,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),
@@ -237,8 +237,8 @@ class CarServiceCard extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => Serviceinner(
-                               productId: product.id,
-                              ),
+                            productId: product.id,
+                          ),
                         ),
                       );
                     },

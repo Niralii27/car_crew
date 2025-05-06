@@ -31,7 +31,7 @@ class _sosServiceinnerState extends State<sosServiceinner> {
   Widget build(BuildContext context) {
     final deviceWidth = MediaQuery.of(context).size.width;
     final deviceHeight = MediaQuery.of(context).size.height;
-     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final userId = FirebaseAuth.instance.currentUser?.uid;
 
     return Scaffold(
@@ -72,7 +72,7 @@ class _sosServiceinnerState extends State<sosServiceinner> {
           //   onPressed: () {},
           // ),
 
-           // Add cart icon with badge showing number of items
+          // Add cart icon with badge showing number of items
 
           Consumer<CartProvider>(
             builder: (_, cart, child) {

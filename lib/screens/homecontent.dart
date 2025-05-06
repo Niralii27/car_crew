@@ -33,7 +33,7 @@ class _HomeContentState extends State<HomeContent> {
   ];
 
   final List<Map<String, String>> services = [
-    {'icon': 'assets/service_icon1.png', 'label': 'Car Service'},
+    {'icon': 'assets/service_icon1.png', 'label': 'Light Fix'},
     {'icon': 'assets/service_icon2.png', 'label': 'Wheel Care'},
     {'icon': 'assets/service_icon6.png', 'label': 'Denting & Painting'},
     {'icon': 'assets/service_icon3.png', 'label': 'AC Service'},
@@ -157,7 +157,6 @@ class _HomeContentState extends State<HomeContent> {
   }
 
 //fetch the car profile image
-
   Future<void> fetchProfileImage() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
@@ -188,23 +187,46 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
+  // Widget to build indicator dots for slider
+  Widget buildIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: images.asMap().entries.map((entry) {
+        return Container(
+          width: 8.0,
+          height: 8.0,
+          margin: EdgeInsets.symmetric(horizontal: 4.0),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: currentIndex == entry.key
+                ? Colors.blue.shade600
+                : Colors.grey.shade400,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   // Widget to build review card for horizontal scroll
   Widget buildReviewCard(Map<String, dynamic> review) {
     return Container(
       width: 280,
       margin: EdgeInsets.symmetric(horizontal: 8),
       child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 2,
+        shadowColor: Colors.black26,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Padding(
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: Colors.blue.shade100,
+                    backgroundColor: Colors.blue.shade50,
                     child: Text(
                       review['customerName'][0].toUpperCase(),
                       style: TextStyle(
@@ -213,7 +235,7 @@ class _HomeContentState extends State<HomeContent> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 10),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,26 +261,37 @@ class _HomeContentState extends State<HomeContent> {
                   ),
                 ],
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   buildRatingStars(review['rating']),
-                  Text(
-                    review['serviceName'],
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      review['serviceName'],
+                      style: TextStyle(
+                        color: Colors.blue[700],
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 10),
               Expanded(
                 child: Text(
                   review['review'],
-                  style: TextStyle(fontSize: 13),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[800],
+                    height: 1.4,
+                  ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -275,8 +308,15 @@ class _HomeContentState extends State<HomeContent> {
     final deviceHeight = MediaQuery.of(context).size.height;
     final deviceWidth = MediaQuery.of(context).size.width;
 
+    // Responsive sizing based on device width
+    final double headerPadding = deviceWidth * 0.04;
+    final double cardElevation = deviceWidth > 600 ? 3.0 : 2.0;
+    final double avatarSize = deviceWidth * 0.06;
+    final double headerFontSize = deviceWidth > 600 ? 22.0 : deviceWidth * 0.05;
+    final double servicePadding = deviceWidth > 600 ? 20.0 : 12.0;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -287,182 +327,291 @@ class _HomeContentState extends State<HomeContent> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
+                    // App Bar with elegant design
+                    Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: deviceWidth * 0.04,
+                        horizontal: headerPadding,
                         vertical: deviceHeight * 0.02,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
                             children: [
-                              // Logo
-                              GestureDetector(
+                              // Logo with tap effect for side panel
+                              InkWell(
                                 onTap: () {
-                                  // Open the side panel using Navigator.push
                                   Navigator.of(context).push(
                                     _createSidePanelRoute(),
                                   );
                                 },
-                                child: CircleAvatar(
-                                  radius: deviceWidth * 0.06,
-                                  backgroundImage: userImage.isNotEmpty
-                                      ? NetworkImage(userImage)
-                                      : AssetImage('assets/profile.png')
-                                          as ImageProvider,
+                                customBorder: CircleBorder(),
+                                child: Container(
+                                  padding: EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.blue.shade100,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: avatarSize,
+                                    backgroundImage: userImage.isNotEmpty
+                                        ? NetworkImage(userImage)
+                                        : AssetImage('assets/profile.png')
+                                            as ImageProvider,
+                                  ),
                                 ),
                               ),
                               SizedBox(width: deviceWidth * 0.03),
 
-                              // Name
-                              Text(
-                                userName,
-                                style: TextStyle(
-                                  fontSize: deviceWidth * 0.04,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              // Greeting and Name with typography
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Welcome back',
+                                    style: TextStyle(
+                                      fontSize: deviceWidth * 0.03,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  Text(
+                                    userName,
+                                    style: TextStyle(
+                                      fontSize: deviceWidth * 0.045,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue[800],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
 
-                          // Notification Icon
-                          CircleAvatar(
-                            radius: deviceWidth * 0.06,
-                            backgroundImage: imageUrl != null
-                                ? NetworkImage(imageUrl!)
-                                : AssetImage('assets/car_profile.png')
-                                    as ImageProvider,
+                          // Car profile image with elegant border
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.blue.shade100,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: avatarSize,
+                              backgroundColor: Colors.white,
+                              backgroundImage: imageUrl != null
+                                  ? NetworkImage(imageUrl!)
+                                  : AssetImage('assets/car_profile.png')
+                                      as ImageProvider,
+                            ),
                           ),
                         ],
                       ),
                     ),
+
+                    // Search bar with elegant design
                     Container(
-                      margin:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      margin: EdgeInsets.symmetric(
+                          horizontal: headerPadding, vertical: 16),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.blue[50], // Light background color
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                            color: Colors.blue.shade300), // Optional border
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
                           Icon(Icons.search,
-                              color: Colors.grey[600]), // Search Icon
+                              color: Colors.blue[400]), // Search Icon
                           SizedBox(width: 10),
                           Expanded(
                             child: TextField(
                               decoration: InputDecoration(
-                                hintText: "Search",
+                                hintText: "Search for services...",
+                                hintStyle: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 14,
+                                ),
                                 border: InputBorder.none,
                               ),
                             ),
                           ),
-                          Icon(Icons.mic,
-                              color: Colors.grey[600]), // Microphone Icon
+                          Container(
+                            padding: EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.mic,
+                                color: Colors.blue[600], size: 20),
+                          ),
                         ],
                       ),
                     ),
-                    SizedBox(
-                      height: deviceHeight * 0.01,
-                    ),
+
+                    // Image Slider with elegant design
                     Container(
-                      height: 200, // Fixed height (can be adjusted)
-                      width: double.infinity, // Full width
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: images.length,
+                      margin: EdgeInsets.symmetric(horizontal: headerPadding),
+                      height: deviceHeight * 0.22,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: PageView.builder(
+                          controller: _pageController,
+                          onPageChanged: (index) {
+                            setState(() {
+                              currentIndex = index;
+                            });
+                          },
+                          itemCount: images.length,
+                          itemBuilder: (context, index) {
+                            return Image.asset(
+                              images[index],
+                              fit: BoxFit.cover,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                    // Indicator dots
+                    Container(
+                      margin: EdgeInsets.symmetric(vertical: 10),
+                      child: buildIndicator(),
+                    ),
+
+                    // Services section with elegant header
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: headerPadding,
+                        right: headerPadding,
+                        top: 16,
+                        bottom: 8,
+                      ),
+                      child: Text(
+                        'Select Services',
+                        style: TextStyle(
+                          fontSize: headerFontSize,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ),
+
+                    // Services grid with elegant cards
+                    Container(
+                      height: deviceHeight * 0.32, // Adjusted height
+                      padding:
+                          EdgeInsets.symmetric(horizontal: headerPadding / 2),
+                      child: GridView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.all(servicePadding / 2),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          childAspectRatio: deviceWidth > 600 ? 0.8 : 0.7,
+                          crossAxisSpacing: servicePadding / 2,
+                          mainAxisSpacing: servicePadding / 2,
+                        ),
+                        itemCount: services.length,
                         itemBuilder: (context, index) {
-                          return Image.asset(
-                            images[index],
-                            fit: BoxFit.cover,
+                          return Card(
+                            elevation: cardElevation,
+                            shadowColor: Colors.blue.withOpacity(0.2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Image.asset(
+                                    services[index]['icon']!,
+                                    width: deviceWidth * 0.09,
+                                    height: deviceWidth * 0.09,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    services[index]['label']!,
+                                    style: TextStyle(
+                                      fontSize: deviceWidth * 0.025,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[800],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         },
                       ),
                     ),
-                    SizedBox(
-                      height: deviceHeight * 0.01,
-                    ),
-                    Container(
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left: deviceWidth * 0.04),
-                            child: Text(
-                              'Select Services',
-                              style: TextStyle(
-                                fontSize: deviceWidth * 0.06,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            height: deviceHeight * 0.35,
-                            child: GridView.builder(
-                              physics: NeverScrollableScrollPhysics(),
-                              padding: EdgeInsets.all(16),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4,
-                                childAspectRatio: 0.7,
-                                crossAxisSpacing: 8,
-                                mainAxisSpacing: 8,
-                              ),
-                              itemCount: services.length,
-                              itemBuilder: (context, index) {
-                                return Card(
-                                  elevation: 3,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        services[index]['icon']!,
-                                        width: 50,
-                                        height: 50,
-                                      ),
-                                      SizedBox(height: 8),
-                                      Text(
-                                        services[index]['label']!,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: deviceHeight * 0.01,
-                    ),
 
-                    // Reviews Section - Horizontal Scrolling
+                    // Reviews Section Header with elegant design
                     Padding(
                       padding: EdgeInsets.only(
-                          left: deviceWidth * 0.04,
-                          right: deviceWidth * 0.04,
-                          top: 10),
+                        left: headerPadding,
+                        right: headerPadding,
+                        top: 0, // Reduced space between services and reviews
+                        bottom: 8,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'Customer Reviews',
                             style: TextStyle(
-                              fontSize: deviceWidth * 0.05,
+                              fontSize: headerFontSize,
                               fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
                             ),
                           ),
                           TextButton(
@@ -473,7 +622,8 @@ class _HomeContentState extends State<HomeContent> {
                             child: Text(
                               'See All',
                               style: TextStyle(
-                                color: Colors.blue,
+                                color: Colors.blue[600],
+                                fontWeight: FontWeight.w500,
                                 fontSize: deviceWidth * 0.035,
                               ),
                             ),
@@ -481,19 +631,24 @@ class _HomeContentState extends State<HomeContent> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 5),
 
-                    // Horizontal scrolling reviews
+                    // Horizontal scrolling reviews with elegant cards
                     Container(
                       height: 160,
+                      margin: EdgeInsets.only(bottom: 16),
                       child: isLoadingReviews
-                          ? Center(child: CircularProgressIndicator())
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.blue),
+                              ),
+                            )
                           : reviews.isEmpty
                               ? Center(
                                   child: Text(
                                     "No reviews yet",
                                     style: TextStyle(
-                                      color: Colors.grey,
+                                      color: Colors.grey[600],
                                       fontSize: 16,
                                     ),
                                   ),
@@ -507,20 +662,6 @@ class _HomeContentState extends State<HomeContent> {
                                   },
                                 ),
                     ),
-
-                    // Container(
-                    //   child: Column(
-                    //     children: [
-                    //       Text(
-                    //         'Car Booking',
-                    //         style: TextStyle(
-                    //           fontSize: deviceWidth * 0.06,
-                    //           fontWeight: FontWeight.bold,
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
                   ],
                 ),
               ),

@@ -222,7 +222,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       // Show a toast to confirm cart cleared
       Fluttertoast.showToast(
         msg: "Your cart has been cleared",
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.blue,
       );
     }
   }

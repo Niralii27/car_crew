@@ -153,7 +153,7 @@ class _ReviewPageState extends State<ReviewPage> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.blue[800],
       ),
       body: _isSubmitting
           ? const Center(child: CircularProgressIndicator())

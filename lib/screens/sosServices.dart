@@ -56,11 +56,11 @@ class _SosservicesState extends State<SosservicesPage> {
         title: Text(
           "SOS Services",
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            // fontWeight: FontWeight.bold,
             fontSize: deviceWidth * 0.06,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
       ),

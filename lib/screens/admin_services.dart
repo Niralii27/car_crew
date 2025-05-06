@@ -39,7 +39,7 @@ class _AdminServicesState extends State<AdminServices> {
             Navigator.pop(context);
           },
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue[800],
         elevation: 0,
         actions: [
           PopupMenuButton<String>(
@@ -127,48 +127,48 @@ class _AdminServicesState extends State<AdminServices> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminAddCategory()),
-                );
-              },
-              child: Text("ADD SERVICES Category"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminAddProduct()),
-                );
-              },
-              child: Text("ADD SERVICES"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminProduct()),
-                );
-              },
-              child: Text("SHOW SERVICES"),
-            ),
+            // ElevatedButton(
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: Colors.blue,
+            //     foregroundColor: Colors.white,
+            //     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            //   ),
+            //   onPressed: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => AdminAddCategory()),
+            //     );
+            //   },
+            //   child: Text("ADD SERVICES Category"),
+            // ),
+            // ElevatedButton(
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: Colors.blue,
+            //     foregroundColor: Colors.white,
+            //     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            //   ),
+            //   onPressed: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => AdminAddProduct()),
+            //     );
+            //   },
+            //   child: Text("ADD SERVICES"),
+            // ),
+            // ElevatedButton(
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: Colors.blue,
+            //     foregroundColor: Colors.white,
+            //     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            //   ),
+            //   onPressed: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => AdminProduct()),
+            //     );
+            //   },
+            //   child: Text("SHOW SERVICES"),
+            // ),
             SizedBox(height: 16),
             Expanded(
               // Stream builder to listen to Firestore updates

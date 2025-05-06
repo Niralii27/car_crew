@@ -11,9 +11,8 @@ import 'package:car_crew/screens/userProfile.dart';
 import 'package:get/get.dart';
 
 class Homepage extends StatefulWidget {
-      final userId = Get.arguments['userId'];
+  final userId = Get.arguments['userId'];
 
-  
   // const Homepage({super.key});
 
   @override

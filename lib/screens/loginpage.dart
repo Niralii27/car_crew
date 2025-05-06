@@ -261,8 +261,8 @@ class _loginpageState extends State<loginpage> {
                               // User exists in Firestore - direct to dashboard
                               print('✅ User is registered → Go to dashboard');
 
-                              final userId = FirebaseAuth.instance.currentUser
-                                  ?.uid; // pass the userid 
+                              final userId = FirebaseAuth
+                                  .instance.currentUser?.uid; // pass the userid
 
                               Get.to(() => Homepage(),
                                   arguments: {'userId': userId});

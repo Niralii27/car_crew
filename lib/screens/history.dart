@@ -433,7 +433,7 @@ class _HistroyPageState extends State<HistroyPage> {
                                         SizedBox(
                                           height: 12,
                                         ),
-                                      Row(
+                                        Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
@@ -443,10 +443,12 @@ class _HistroyPageState extends State<HistroyPage> {
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
-                                                    builder: (context) => ReviewPage(
+                                                    builder: (context) =>
+                                                        ReviewPage(
                                                       bookingData: bookingData,
                                                       services: services,
-                                                      userId: _auth.currentUser!.uid,
+                                                      userId: _auth
+                                                          .currentUser!.uid,
                                                     ),
                                                   ),
                                                 );
